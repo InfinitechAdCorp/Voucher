@@ -1,26 +1,32 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Download, Plus, Trash2 } from 'lucide-react'
-import Link from "next/link"
-import CashVoucherPreview from "@/components/vouchers/cash-voucher-preview"
-import html2canvas from "html2canvas"
-import api from "@/lib/api"
-import type { VoucherFormData, ParticularItem } from "@/types"
+import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Download, Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
+import CashVoucherPreview from "@/components/vouchers/cash-voucher-preview";
+import html2canvas from "html2canvas";
+import api from "@/lib/api";
+import type { VoucherFormData, ParticularItem } from "@/types";
 
 export default function CashVoucherPage() {
-  const searchParams = useSearchParams()
-  const accountId = searchParams.get("account_id")
-  const previewRef = useRef<HTMLDivElement>(null)
-  const [isExporting, setIsExporting] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [isLoadingNumber, setIsLoadingNumber] = useState(true)
+  const searchParams = useSearchParams();
+  const accountId = searchParams.get("account_id");
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingNumber, setIsLoadingNumber] = useState(true);
 
   const [formData, setFormData] = useState<VoucherFormData>({
     amount: "",
@@ -34,108 +40,119 @@ export default function CashVoucherPage() {
     approved_signature: "",
     approved_name: "",
     approved_date: new Date().toISOString().split("T")[0],
-  })
+  });
 
   // Auto-fetch next voucher number when component loads
   useEffect(() => {
     const fetchNextVoucherNumber = async () => {
       try {
-        setIsLoadingNumber(true)
-        const response = await api.getNextCashVoucherNumber()
+        setIsLoadingNumber(true);
+        const response = await api.getNextCashVoucherNumber();
         if (response.success) {
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
-            voucher_number: response.voucher_number
-          }))
+            voucher_number: response.voucher_number,
+          }));
         }
       } catch (error) {
-        console.error("Error fetching next voucher number:", error)
+        console.error("Error fetching next voucher number:", error);
         // Fallback to a default format if API fails
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          voucher_number: "443-25-0001"
-        }))
+          voucher_number: "443-25-0001",
+        }));
       } finally {
-        setIsLoadingNumber(false)
+        setIsLoadingNumber(false);
       }
-    }
+    };
 
-    fetchNextVoucherNumber()
-  }, [])
+    fetchNextVoucherNumber();
+  }, []);
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return "___________"
-    const date = new Date(dateString)
+    if (!dateString) return "___________";
+    const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
-    }).format(date)
-  }
+    }).format(date);
+  };
 
   const formatAmount = (amount: string) => {
-    const num = Number.parseFloat(amount || "0")
-    const formatted = num.toLocaleString("en-US", { minimumFractionDigits: 2 })
-    const parts = formatted.split(".")
-    return { main: parts[0], cents: parts[1] || "00" }
-  }
+    const num = Number.parseFloat(amount || "0");
+    const formatted = num.toLocaleString("en-US", { minimumFractionDigits: 2 });
+    const parts = formatted.split(".");
+    return { main: parts[0], cents: parts[1] || "00" };
+  };
 
   const calculateTotal = () => {
     if (formData.particulars_items && formData.particulars_items.length > 0) {
-      return formData.particulars_items.reduce((sum, item) => sum + Number.parseFloat(item.amount || "0"), 0)
+      return formData.particulars_items.reduce(
+        (sum, item) => sum + Number.parseFloat(item.amount || "0"),
+        0
+      );
     }
-    return Number.parseFloat(formData.amount || "0")
-  }
+    return Number.parseFloat(formData.amount || "0");
+  };
 
-  const totalAmount = calculateTotal()
-  const totalParts = formatAmount(totalAmount.toString())
+  const totalAmount = calculateTotal();
+  const totalParts = formatAmount(totalAmount.toString());
 
-  const updateFormData = (field: keyof VoucherFormData, value: string | ParticularItem[]) => {
+  const updateFormData = (
+    field: keyof VoucherFormData,
+    value: string | ParticularItem[]
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   const addParticularItem = () => {
-    const newItem: ParticularItem = { description: "", amount: "" }
+    const newItem: ParticularItem = { description: "", amount: "" };
     setFormData((prev) => ({
       ...prev,
       particulars_items: [...(prev.particulars_items || []), newItem],
-    }))
-  }
+    }));
+  };
 
-  const updateParticularItem = (index: number, field: keyof ParticularItem, value: string) => {
-    const updatedItems = [...(formData.particulars_items || [])]
-    updatedItems[index] = { ...updatedItems[index], [field]: value }
-    setFormData((prev) => ({ ...prev, particulars_items: updatedItems }))
-  }
+  const updateParticularItem = (
+    index: number,
+    field: keyof ParticularItem,
+    value: string
+  ) => {
+    const updatedItems = [...(formData.particulars_items || [])];
+    updatedItems[index] = { ...updatedItems[index], [field]: value };
+    setFormData((prev) => ({ ...prev, particulars_items: updatedItems }));
+  };
 
   const removeParticularItem = (index: number) => {
-    const updatedItems = formData.particulars_items?.filter((_, i) => i !== index) || []
-    setFormData((prev) => ({ ...prev, particulars_items: updatedItems }))
-  }
+    const updatedItems =
+      formData.particulars_items?.filter((_, i) => i !== index) || [];
+    setFormData((prev) => ({ ...prev, particulars_items: updatedItems }));
+  };
 
   const exportAsJPEG = async () => {
-    if (!previewRef.current) return
+    if (!previewRef.current) return;
 
-    setIsExporting(true)
+    setIsExporting(true);
 
     try {
       // Create a temporary landscape container for export with reduced height
-      const exportContainer = document.createElement("div")
-      exportContainer.style.position = "absolute"
-      exportContainer.style.left = "-9999px"
-      exportContainer.style.top = "0"
-      exportContainer.style.width = "1100px" // Landscape width
-      exportContainer.style.height = "auto" // Let content determine height
-      exportContainer.style.minHeight = "600px" // Minimum height
-      exportContainer.style.backgroundColor = "#ffffff"
-      exportContainer.style.padding = "30px"
-      exportContainer.style.fontFamily = "Arial, sans-serif"
-      exportContainer.style.fontSize = "14px"
-      exportContainer.style.color = "#000000"
-      exportContainer.style.boxSizing = "border-box"
+      const exportContainer = document.createElement("div");
+      exportContainer.style.position = "absolute";
+      exportContainer.style.left = "-9999px";
+      exportContainer.style.top = "0";
+      exportContainer.style.width = "1100px"; // Landscape width
+      exportContainer.style.height = "auto"; // Let content determine height
+      exportContainer.style.minHeight = "600px"; // Minimum height
+      exportContainer.style.backgroundColor = "#ffffff";
+      exportContainer.style.padding = "30px";
+      exportContainer.style.fontFamily = "Arial, sans-serif";
+      exportContainer.style.fontSize = "14px";
+      exportContainer.style.color = "#000000";
+      exportContainer.style.boxSizing = "border-box";
 
       // Create landscape voucher HTML with tighter spacing
       exportContainer.innerHTML = `
@@ -156,7 +173,11 @@ export default function CashVoucherPage() {
             <div style="display: flex; align-items: baseline;">
               <span style="font-family: 'Times New Roman', serif; font-weight: 300; font-size: 16px; color: #000000; margin-right: 10px;">Amount:</span>
               <span style="font-family: 'Arial Narrow', Arial, sans-serif; font-size: 16px; color: #000000; border-bottom: 1px solid #000000; padding: 2px 10px; min-width: 200px; display: inline-block;">
-                ${totalAmount > 0 ? `₱${totalParts.main}.${totalParts.cents}` : ""}
+                ${
+                  totalAmount > 0
+                    ? `₱${totalParts.main}.${totalParts.cents}`
+                    : ""
+                }
               </span>
             </div>
             <div style="display: flex; align-items: baseline;">
@@ -199,19 +220,24 @@ export default function CashVoucherPage() {
             <div style="min-height: 100px; display: flex;">
               <div style="flex: 3; padding: 10px; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000; border-right: 1px solid #000000;">
                 ${
-                  formData.particulars_items && formData.particulars_items.length > 0
+                  formData.particulars_items &&
+                  formData.particulars_items.length > 0
                     ? formData.particulars_items
-                        .map((item) => `<div style="margin-bottom: 6px;">${item.description}</div>`)
+                        .map(
+                          (item) =>
+                            `<div style="margin-bottom: 6px;">${item.description}</div>`
+                        )
                         .join("")
                     : formData.particulars || ""
                 }
               </div>
               <div style="flex: 1; padding: 10px;">
                 ${
-                  formData.particulars_items && formData.particulars_items.length > 0
+                  formData.particulars_items &&
+                  formData.particulars_items.length > 0
                     ? formData.particulars_items
                         .map((item) => {
-                          const itemAmount = formatAmount(item.amount || "0")
+                          const itemAmount = formatAmount(item.amount || "0");
                           return `<div style="margin-bottom: 6px; display: flex;">
                         <span style="flex: 1; text-align: right; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000;">
                           ${item.amount ? `₱${itemAmount.main}` : ""}
@@ -219,15 +245,23 @@ export default function CashVoucherPage() {
                         <span style="width: 30px; text-align: left; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000;">
                           ${item.amount ? `.${itemAmount.cents}` : ""}
                         </span>
-                      </div>`
+                      </div>`;
                         })
                         .join("")
                     : `<div style="display: flex; height: 100%; align-items: flex-start;">
                       <span style="flex: 1; text-align: right; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000;">
-                        ${formData.amount ? `₱${formatAmount(formData.amount).main}` : ""}
+                        ${
+                          formData.amount
+                            ? `₱${formatAmount(formData.amount).main}`
+                            : ""
+                        }
                       </span>
                       <span style="width: 30px; text-align: left; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000;">
-                        ${formData.amount ? `.${formatAmount(formData.amount).cents}` : ""}
+                        ${
+                          formData.amount
+                            ? `.${formatAmount(formData.amount).cents}`
+                            : ""
+                        }
                       </span>
                     </div>`
                 }
@@ -314,32 +348,32 @@ export default function CashVoucherPage() {
             </div>
           </div>
         </div>
-      `
+      `;
 
       // Add to document temporarily
-      document.body.appendChild(exportContainer)
+      document.body.appendChild(exportContainer);
 
       // Wait for images to load
-      const images = exportContainer.querySelectorAll("img")
+      const images = exportContainer.querySelectorAll("img");
       await Promise.all(
         Array.from(images).map((img) => {
           return new Promise((resolve) => {
             if (img.complete) {
-              resolve(true)
+              resolve(true);
             } else {
-              img.onload = () => resolve(true)
-              img.onerror = () => resolve(true)
+              img.onload = () => resolve(true);
+              img.onerror = () => resolve(true);
             }
-          })
-        }),
-      )
+          });
+        })
+      );
 
       // Wait a bit more for rendering
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Get the actual content height
-      const contentHeight = exportContainer.scrollHeight
-      const finalHeight = Math.max(contentHeight, 500) // Minimum 500px
+      const contentHeight = exportContainer.scrollHeight;
+      const finalHeight = Math.max(contentHeight, 500); // Minimum 500px
 
       const canvas = await html2canvas(exportContainer, {
         scale: 2,
@@ -354,82 +388,88 @@ export default function CashVoucherPage() {
         scrollY: 0,
         windowWidth: 1100,
         windowHeight: finalHeight,
-      })
+      });
 
       // Remove temporary container
-      document.body.removeChild(exportContainer)
+      document.body.removeChild(exportContainer);
 
       // Verify canvas has content
-      const ctx = canvas.getContext("2d")
+      const ctx = canvas.getContext("2d");
       if (!ctx) {
-        throw new Error("Could not get canvas context")
+        throw new Error("Could not get canvas context");
       }
 
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-      const data = imageData.data
-      let hasContent = false
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      let hasContent = false;
 
       for (let i = 0; i < data.length; i += 4) {
         if (data[i] !== 255 || data[i + 1] !== 255 || data[i + 2] !== 255) {
-          hasContent = true
-          break
+          hasContent = true;
+          break;
         }
       }
 
       if (!hasContent) {
-        throw new Error("Canvas appears to be empty - the voucher may not have rendered properly")
+        throw new Error(
+          "Canvas appears to be empty - the voucher may not have rendered properly"
+        );
       }
 
       // Create and download the image
-      const link = document.createElement("a")
-      link.download = `cash-voucher-${formData.voucher_number || "draft"}.jpg`
-      link.href = canvas.toDataURL("image/jpeg", 0.95)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      const link = document.createElement("a");
+      link.download = `cash-voucher-${formData.voucher_number || "draft"}.jpg`;
+      link.href = canvas.toDataURL("image/jpeg", 0.95);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
-      console.error("Error exporting voucher:", error)
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-      alert(`Error exporting voucher: ${errorMessage}. Please try again or check that all fields are filled properly.`)
+      console.error("Error exporting voucher:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      alert(
+        `Error exporting voucher: ${errorMessage}. Please try again or check that all fields are filled properly.`
+      );
     } finally {
-      setIsExporting(false)
+      setIsExporting(false);
     }
-  }
+  };
 
   const saveVoucher = async () => {
-    setIsSaving(true)
+    setIsSaving(true);
     try {
       // Use the pre-fetched voucher number - don't remove it from the data
       const dataToSave = {
         ...formData,
         // The voucher_number is already set from the API call
-      }
+      };
 
       // Debug: Log the data being sent
-      console.log("Saving voucher with data:", dataToSave)
+      console.log("Saving voucher with data:", dataToSave);
 
-      const response = await api.createCashVoucher(dataToSave)
+      const response = await api.createCashVoucher(dataToSave);
 
       if (response.success) {
-        alert("Voucher saved successfully!")
+        alert("Voucher saved successfully!");
         // The voucher number should already be correct, but update if backend returns a different one
         if (response.data.voucher_number !== formData.voucher_number) {
           setFormData((prev) => ({
             ...prev,
             voucher_number: response.data.voucher_number,
-          }))
+          }));
         }
       } else {
-        throw new Error(response.message || "Failed to save voucher")
+        throw new Error(response.message || "Failed to save voucher");
       }
     } catch (error) {
-      console.error("Error saving voucher:", error)
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-      alert(`Error saving voucher: ${errorMessage}. Please try again.`)
+      console.error("Error saving voucher:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      alert(`Error saving voucher: ${errorMessage}. Please try again.`);
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -444,15 +484,25 @@ export default function CashVoucherPage() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Cash Voucher</h1>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Cash Voucher
+                </h1>
                 <p className="text-gray-600">Create and preview cash voucher</p>
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={saveVoucher} variant="outline" disabled={isSaving}>
+              <Button
+                onClick={saveVoucher}
+                variant="outline"
+                disabled={isSaving}
+              >
                 {isSaving ? "Saving..." : "Save Voucher"}
               </Button>
-              <Button onClick={exportAsJPEG} disabled={isExporting} className="flex items-center">
+              <Button
+                onClick={exportAsJPEG}
+                disabled={isExporting}
+                className="flex items-center"
+              >
                 <Download className="h-4 w-4 mr-2" />
                 {isExporting ? "Exporting..." : "Export as JPEG"}
               </Button>
@@ -472,13 +522,17 @@ export default function CashVoucherPage() {
             <CardContent className="space-y-6">
               {/* Basic Information Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Basic Information</h3>
+                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                  Basic Information
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="voucher_number">Voucher No.</Label>
                     <Input
                       id="voucher_number"
-                      value={isLoadingNumber ? "Loading..." : formData.voucher_number}
+                      value={
+                        isLoadingNumber ? "Loading..." : formData.voucher_number
+                      }
                       disabled
                       placeholder="Loading next number..."
                     />
@@ -507,23 +561,40 @@ export default function CashVoucherPage() {
               {/* Particulars Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b pb-2">
-                  <h3 className="text-lg font-medium text-gray-900">Particulars</h3>
-                  <Button type="button" onClick={addParticularItem} size="sm" variant="outline">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Particulars
+                  </h3>
+                  <Button
+                    type="button"
+                    onClick={addParticularItem}
+                    size="sm"
+                    variant="outline"
+                  >
                     <Plus className="h-4 w-4 mr-1" />
                     Add Item
                   </Button>
                 </div>
 
-                {formData.particulars_items && formData.particulars_items.length > 0 ? (
+                {formData.particulars_items &&
+                formData.particulars_items.length > 0 ? (
                   <div className="space-y-3">
                     {formData.particulars_items.map((item, index) => (
-                      <div key={index} className="grid grid-cols-12 gap-2 items-end p-3 bg-gray-50 rounded-lg">
+                      <div
+                        key={index}
+                        className="grid grid-cols-12 gap-2 items-end p-3 bg-gray-50 rounded-lg"
+                      >
                         <div className="col-span-7">
                           <Label className="text-sm">Description</Label>
                           <Input
                             placeholder="Enter description"
                             value={item.description}
-                            onChange={(e) => updateParticularItem(index, "description", e.target.value)}
+                            onChange={(e) =>
+                              updateParticularItem(
+                                index,
+                                "description",
+                                e.target.value
+                              )
+                            }
                           />
                         </div>
                         <div className="col-span-4">
@@ -533,11 +604,22 @@ export default function CashVoucherPage() {
                             type="number"
                             step="0.01"
                             value={item.amount}
-                            onChange={(e) => updateParticularItem(index, "amount", e.target.value)}
+                            onChange={(e) =>
+                              updateParticularItem(
+                                index,
+                                "amount",
+                                e.target.value
+                              )
+                            }
                           />
                         </div>
                         <div className="col-span-1">
-                          <Button type="button" onClick={() => removeParticularItem(index)} size="sm" variant="outline">
+                          <Button
+                            type="button"
+                            onClick={() => removeParticularItem(index)}
+                            size="sm"
+                            variant="outline"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -556,7 +638,9 @@ export default function CashVoucherPage() {
                       <Textarea
                         id="particulars"
                         value={formData.particulars}
-                        onChange={(e) => updateFormData("particulars", e.target.value)}
+                        onChange={(e) =>
+                          updateFormData("particulars", e.target.value)
+                        }
                         placeholder="Enter particulars or use Add Item button above"
                         rows={4}
                       />
@@ -566,7 +650,9 @@ export default function CashVoucherPage() {
                       <Input
                         id="amount"
                         value={formData.amount}
-                        onChange={(e) => updateFormData("amount", e.target.value)}
+                        onChange={(e) =>
+                          updateFormData("amount", e.target.value)
+                        }
                         placeholder="500000.00"
                         type="number"
                         step="0.01"
@@ -578,14 +664,20 @@ export default function CashVoucherPage() {
 
               {/* Signatures Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Signatures</h3>
+                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                  Signatures
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="printed_name">Received By (Printed Name)</Label>
+                    <Label htmlFor="printed_name">
+                      Received By (Printed Name)
+                    </Label>
                     <Input
                       id="printed_name"
                       value={formData.printed_name}
-                      onChange={(e) => updateFormData("printed_name", e.target.value)}
+                      onChange={(e) =>
+                        updateFormData("printed_name", e.target.value)
+                      }
                       placeholder="Enter printed name"
                     />
                   </div>
@@ -596,13 +688,16 @@ export default function CashVoucherPage() {
                       type="file"
                       accept="image/*"
                       onChange={(e) => {
-                        const file = e.target.files?.[0]
+                        const file = e.target.files?.[0];
                         if (file) {
-                          const reader = new FileReader()
+                          const reader = new FileReader();
                           reader.onload = (event) => {
-                            updateFormData("signature", event.target?.result as string)
-                          }
-                          reader.readAsDataURL(file)
+                            updateFormData(
+                              "signature",
+                              event.target?.result as string
+                            );
+                          };
+                          reader.readAsDataURL(file);
                         }
                       }}
                     />
@@ -612,14 +707,20 @@ export default function CashVoucherPage() {
 
               {/* Approval Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Approval Information</h3>
+                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                  Approval Information
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="approved_name">Approved By (Printed Name)</Label>
+                    <Label htmlFor="approved_name">
+                      Approved By (Printed Name)
+                    </Label>
                     <Input
                       id="approved_name"
                       value={formData.approved_name}
-                      onChange={(e) => updateFormData("approved_name", e.target.value)}
+                      onChange={(e) =>
+                        updateFormData("approved_name", e.target.value)
+                      }
                       placeholder="Enter printed name"
                     />
                   </div>
@@ -629,24 +730,31 @@ export default function CashVoucherPage() {
                       id="approved_date"
                       type="date"
                       value={formData.approved_date}
-                      onChange={(e) => updateFormData("approved_date", e.target.value)}
+                      onChange={(e) =>
+                        updateFormData("approved_date", e.target.value)
+                      }
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="approved_signature">Approved By Signature</Label>
+                  <Label htmlFor="approved_signature">
+                    Approved By Signature
+                  </Label>
                   <Input
                     id="approved_signature"
                     type="file"
                     accept="image/*"
                     onChange={(e) => {
-                      const file = e.target.files?.[0]
+                      const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader()
+                        const reader = new FileReader();
                         reader.onload = (event) => {
-                          updateFormData("approved_signature", event.target?.result as string)
-                        }
-                        reader.readAsDataURL(file)
+                          updateFormData(
+                            "approved_signature",
+                            event.target?.result as string
+                          );
+                        };
+                        reader.readAsDataURL(file);
                       }
                     }}
                   />
@@ -659,7 +767,9 @@ export default function CashVoucherPage() {
           <Card>
             <CardHeader>
               <CardTitle>Live Preview</CardTitle>
-              <CardDescription>Real-time preview of your cash voucher</CardDescription>
+              <CardDescription>
+                Real-time preview of your cash voucher
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div
@@ -674,5 +784,5 @@ export default function CashVoucherPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

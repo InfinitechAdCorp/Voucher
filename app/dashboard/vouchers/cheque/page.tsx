@@ -1,25 +1,31 @@
-"use client"
+"use client";
 
-import { useState, useRef, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ArrowLeft, Download } from 'lucide-react'
-import Link from "next/link"
-import ChequeVoucherPreview from "@/components/vouchers/cheque-voucher-preview"
-import html2canvas from "html2canvas"
-import api from "@/lib/api"
-import type { ChequeVoucherFormData } from "@/types/cheque-voucher"
+import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, Download } from "lucide-react";
+import Link from "next/link";
+import ChequeVoucherPreview from "@/components/vouchers/cheque-voucher-preview";
+import html2canvas from "html2canvas";
+import api from "@/lib/api";
+import type { ChequeVoucherFormData } from "@/types/cheque-voucher";
 
 const ChequeVoucherPage = () => {
-  const searchParams = useSearchParams()
-  const accountId = searchParams.get("account_id")
-  const previewRef = useRef<HTMLDivElement>(null)
-  const [isExporting, setIsExporting] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [isLoadingNumber, setIsLoadingNumber] = useState(true)
+  const searchParams = useSearchParams();
+  const accountId = searchParams.get("account_id");
+  const previewRef = useRef<HTMLDivElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingNumber, setIsLoadingNumber] = useState(true);
 
   const [formData, setFormData] = useState<ChequeVoucherFormData>({
     account_no: "",
@@ -32,82 +38,85 @@ const ChequeVoucherPage = () => {
     signature: "",
     printed_name: "",
     approved_date: new Date().toISOString().split("T")[0],
-  })
+  });
 
   // Auto-fetch next cheque number when component loads
   useEffect(() => {
     const fetchNextChequeNumber = async () => {
       try {
-        setIsLoadingNumber(true)
-        const response = await api.getNextChequeVoucherNumber()
+        setIsLoadingNumber(true);
+        const response = await api.getNextChequeVoucherNumber();
         if (response.success) {
           setFormData((prev) => ({
             ...prev,
             cheque_no: response.cheque_number,
-          }))
+          }));
         }
       } catch (error) {
-        console.error("Error fetching next cheque number:", error)
+        console.error("Error fetching next cheque number:", error);
         // Fallback to a default format if API fails
         setFormData((prev) => ({
           ...prev,
           cheque_no: "443-25-0001",
-        }))
+        }));
       } finally {
-        setIsLoadingNumber(false)
+        setIsLoadingNumber(false);
       }
-    }
+    };
 
-    fetchNextChequeNumber()
-  }, [])
+    fetchNextChequeNumber();
+  }, []);
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return "___________"
-    const date = new Date(dateString)
+    if (!dateString) return "___________";
+    const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
-    }).format(date)
-  }
+    }).format(date);
+  };
 
   const formatAmount = (amount: string) => {
-    const num = Number.parseFloat(amount || "0")
-    const formatted = num.toLocaleString("en-US", { minimumFractionDigits: 2 })
-    const parts = formatted.split(".")
-    return { main: parts[0], cents: parts[1] || "00" }
-  }
+    const num = Number.parseFloat(amount || "0");
+    const formatted = num.toLocaleString("en-US", { minimumFractionDigits: 2 });
+    const parts = formatted.split(".");
+    return { main: parts[0], cents: parts[1] || "00" };
+  };
 
-  const updateFormData = (field: keyof ChequeVoucherFormData, value: string) => {
+  const updateFormData = (
+    field: keyof ChequeVoucherFormData,
+    value: string
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   const exportAsJPEG = async () => {
-    if (!previewRef.current) return
+    if (!previewRef.current) return;
 
-    setIsExporting(true)
+    setIsExporting(true);
 
     try {
       // Create a temporary landscape container for export
-      const exportContainer = document.createElement("div")
-      exportContainer.style.position = "absolute"
-      exportContainer.style.left = "-9999px"
-      exportContainer.style.top = "0"
-      exportContainer.style.width = "1100px"
-      exportContainer.style.height = "auto"
-      exportContainer.style.minHeight = "600px"
-      exportContainer.style.backgroundColor = "#ffffff"
-      exportContainer.style.padding = "30px"
-      exportContainer.style.fontFamily = "Arial, sans-serif"
-      exportContainer.style.fontSize = "14px"
-      exportContainer.style.color = "#000000"
-      exportContainer.style.boxSizing = "border-box"
+      const exportContainer = document.createElement("div");
+      exportContainer.style.position = "absolute";
+      exportContainer.style.left = "-9999px";
+      exportContainer.style.top = "0";
+      exportContainer.style.width = "1100px";
+      exportContainer.style.height = "auto";
+      exportContainer.style.minHeight = "600px";
+      exportContainer.style.backgroundColor = "#ffffff";
+      exportContainer.style.padding = "30px";
+      exportContainer.style.fontFamily = "Arial, sans-serif";
+      exportContainer.style.fontSize = "14px";
+      exportContainer.style.color = "#000000";
+      exportContainer.style.boxSizing = "border-box";
 
-      const totalAmount = Number.parseFloat(formData.amount || "0")
-      const totalParts = formatAmount(totalAmount.toString())
+      const totalAmount = Number.parseFloat(formData.amount || "0");
+      const totalParts = formatAmount(totalAmount.toString());
 
       // Create landscape voucher HTML
       exportContainer.innerHTML = `
@@ -158,13 +167,31 @@ const ChequeVoucherPage = () => {
             <!-- Cheque Details Content -->
             <div style="min-height: 120px; display: flex;">
               <div style="width: 75%; padding: 10px; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000; border-right: 1px solid #000000;">
-                <div style="margin-bottom: 8px;"><strong>Cheque No:</strong> ${formData.cheque_no || ""}</div>
-                <div style="margin-bottom: 8px;"><strong>Pay To:</strong> ${formData.pay_to || ""}</div>
-                <div style="margin-bottom: 8px;"><strong>Date:</strong> ${formatDate(formData.cheque_date)}</div>
-                <div style="margin-bottom: 8px;"><strong>Amount:</strong> ${formData.amount ? `${formatAmount(formData.amount).main}.${formatAmount(formData.amount).cents}` : ""}</div>
+                <div style="margin-bottom: 8px;"><strong>Cheque No:</strong> ${
+                  formData.cheque_no || ""
+                }</div>
+                <div style="margin-bottom: 8px;"><strong>Pay To:</strong> ${
+                  formData.pay_to || ""
+                }</div>
+                <div style="margin-bottom: 8px;"><strong>Date:</strong> ${formatDate(
+                  formData.cheque_date
+                )}</div>
+                <div style="margin-bottom: 8px;"><strong>Amount:</strong> ${
+                  formData.amount
+                    ? `${formatAmount(formData.amount).main}.${
+                        formatAmount(formData.amount).cents
+                      }`
+                    : ""
+                }</div>
               </div>
               <div style="width: 25%; padding: 10px; text-align: right; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000; display: flex; align-items: flex-end; justify-content: start;">
-                ${formData.amount ? `${formatAmount(formData.amount).main}.${formatAmount(formData.amount).cents}` : ""}
+                ${
+                  formData.amount
+                    ? `${formatAmount(formData.amount).main}.${
+                        formatAmount(formData.amount).cents
+                      }`
+                    : ""
+                }
               </div>
             </div>
 
@@ -209,38 +236,42 @@ const ChequeVoucherPage = () => {
               <span style="font-family: 'Times New Roman', serif; font-weight: 300; font-size: 14px; color: #000000; width: 100px; padding-bottom: 2px;">Date:</span>
               <div style="width: 190px; border-bottom: 1px solid #000000; height: 22px; display: flex; align-items: center; margin-left: 0; padding-left: 10px;">
                 <span style="font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000;">
-                  ${formatDate(formData.approved_date) !== "___________" ? formatDate(formData.approved_date) : ""}
+                  ${
+                    formatDate(formData.approved_date) !== "___________"
+                      ? formatDate(formData.approved_date)
+                      : ""
+                  }
                 </span>
               </div>
             </div>
           </div>
         </div>
-      `
+      `;
 
       // Add to document temporarily
-      document.body.appendChild(exportContainer)
+      document.body.appendChild(exportContainer);
 
       // Wait for images to load
-      const images = exportContainer.querySelectorAll("img")
+      const images = exportContainer.querySelectorAll("img");
       await Promise.all(
         Array.from(images).map((img) => {
           return new Promise((resolve) => {
             if (img.complete) {
-              resolve(true)
+              resolve(true);
             } else {
-              img.onload = () => resolve(true)
-              img.onerror = () => resolve(true)
+              img.onload = () => resolve(true);
+              img.onerror = () => resolve(true);
             }
-          })
-        }),
-      )
+          });
+        })
+      );
 
       // Wait a bit more for rendering
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Get the actual content height
-      const contentHeight = exportContainer.scrollHeight
-      const finalHeight = Math.max(contentHeight, 500)
+      const contentHeight = exportContainer.scrollHeight;
+      const finalHeight = Math.max(contentHeight, 500);
 
       const canvas = await html2canvas(exportContainer, {
         scale: 2,
@@ -255,58 +286,62 @@ const ChequeVoucherPage = () => {
         scrollY: 0,
         windowWidth: 1100,
         windowHeight: finalHeight,
-      })
+      });
 
       // Remove temporary container
-      document.body.removeChild(exportContainer)
+      document.body.removeChild(exportContainer);
 
       // Create and download the image
-      const link = document.createElement("a")
-      link.download = `cheque-voucher-${formData.cheque_no || "draft"}.jpg`
-      link.href = canvas.toDataURL("image/jpeg", 0.95)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      const link = document.createElement("a");
+      link.download = `cheque-voucher-${formData.cheque_no || "draft"}.jpg`;
+      link.href = canvas.toDataURL("image/jpeg", 0.95);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
-      console.error("Error exporting voucher:", error)
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-      alert(`Error exporting voucher: ${errorMessage}. Please try again or check that all fields are filled properly.`)
+      console.error("Error exporting voucher:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      alert(
+        `Error exporting voucher: ${errorMessage}. Please try again or check that all fields are filled properly.`
+      );
     } finally {
-      setIsExporting(false)
+      setIsExporting(false);
     }
-  }
+  };
 
   const saveVoucher = async () => {
-    setIsSaving(true)
+    setIsSaving(true);
     try {
       // Use the pre-fetched cheque number - don't remove it from the data
       const dataToSave = {
         ...formData,
         // The cheque_no is already set from the API call
-      }
-      console.log("Saving cheque voucher with data:", dataToSave)
+      };
+      console.log("Saving cheque voucher with data:", dataToSave);
 
-      const response = await api.createChequeVoucher(dataToSave)
+      const response = await api.createChequeVoucher(dataToSave);
       if (response.success) {
-        alert("Cheque voucher saved successfully!")
+        alert("Cheque voucher saved successfully!");
         // The cheque number should already be correct, but update if backend returns a different one
         if (response.data.cheque_no !== formData.cheque_no) {
           setFormData((prev) => ({
             ...prev,
             cheque_no: response.data.cheque_no,
-          }))
+          }));
         }
       } else {
-        throw new Error(response.message || "Failed to save cheque voucher")
+        throw new Error(response.message || "Failed to save cheque voucher");
       }
     } catch (error) {
-      console.error("Error saving cheque voucher:", error)
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-      alert(`Error saving cheque voucher: ${errorMessage}. Please try again.`)
+      console.error("Error saving cheque voucher:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      alert(`Error saving cheque voucher: ${errorMessage}. Please try again.`);
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -321,15 +356,27 @@ const ChequeVoucherPage = () => {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Cheque Voucher</h1>
-                <p className="text-gray-600">Create and preview cheque voucher</p>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Cheque Voucher
+                </h1>
+                <p className="text-gray-600">
+                  Create and preview cheque voucher
+                </p>
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={saveVoucher} variant="outline" disabled={isSaving}>
+              <Button
+                onClick={saveVoucher}
+                variant="outline"
+                disabled={isSaving}
+              >
                 {isSaving ? "Saving..." : "Save Voucher"}
               </Button>
-              <Button onClick={exportAsJPEG} disabled={isExporting} className="flex items-center">
+              <Button
+                onClick={exportAsJPEG}
+                disabled={isExporting}
+                className="flex items-center"
+              >
                 <Download className="h-4 w-4 mr-2" />
                 {isExporting ? "Exporting..." : "Export as JPEG"}
               </Button>
@@ -344,19 +391,25 @@ const ChequeVoucherPage = () => {
           <Card>
             <CardHeader>
               <CardTitle>Cheque Voucher Details</CardTitle>
-              <CardDescription>Fill in the cheque voucher information</CardDescription>
+              <CardDescription>
+                Fill in the cheque voucher information
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Basic Information Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Basic Information</h3>
+                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                  Basic Information
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="account_no">Account No.</Label>
                     <Input
                       id="account_no"
                       value={formData.account_no}
-                      onChange={(e) => updateFormData("account_no", e.target.value)}
+                      onChange={(e) =>
+                        updateFormData("account_no", e.target.value)
+                      }
                       placeholder="Enter account number"
                     />
                   </div>
@@ -376,7 +429,9 @@ const ChequeVoucherPage = () => {
                     <Input
                       id="paid_to"
                       value={formData.paid_to}
-                      onChange={(e) => updateFormData("paid_to", e.target.value)}
+                      onChange={(e) =>
+                        updateFormData("paid_to", e.target.value)
+                      }
                       placeholder="Enter recipient name"
                     />
                   </div>
@@ -384,7 +439,9 @@ const ChequeVoucherPage = () => {
                     <Label htmlFor="cheque_no">Cheque No.</Label>
                     <Input
                       id="cheque_no"
-                      value={isLoadingNumber ? "Loading..." : formData.cheque_no}
+                      value={
+                        isLoadingNumber ? "Loading..." : formData.cheque_no
+                      }
                       disabled
                       placeholder="Loading next number..."
                     />
@@ -394,7 +451,9 @@ const ChequeVoucherPage = () => {
 
               {/* Cheque Details Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Cheque Details</h3>
+                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                  Cheque Details
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="pay_to">Pay To</Label>
@@ -411,7 +470,9 @@ const ChequeVoucherPage = () => {
                       id="cheque_date"
                       type="date"
                       value={formData.cheque_date}
-                      onChange={(e) => updateFormData("cheque_date", e.target.value)}
+                      onChange={(e) =>
+                        updateFormData("cheque_date", e.target.value)
+                      }
                     />
                   </div>
                 </div>
@@ -430,14 +491,18 @@ const ChequeVoucherPage = () => {
 
               {/* Approval Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Approval Information</h3>
+                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                  Approval Information
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="printed_name">Printed Name</Label>
                     <Input
                       id="printed_name"
                       value={formData.printed_name}
-                      onChange={(e) => updateFormData("printed_name", e.target.value)}
+                      onChange={(e) =>
+                        updateFormData("printed_name", e.target.value)
+                      }
                       placeholder="Enter printed name"
                     />
                   </div>
@@ -447,7 +512,9 @@ const ChequeVoucherPage = () => {
                       id="approved_date"
                       type="date"
                       value={formData.approved_date}
-                      onChange={(e) => updateFormData("approved_date", e.target.value)}
+                      onChange={(e) =>
+                        updateFormData("approved_date", e.target.value)
+                      }
                     />
                   </div>
                 </div>
@@ -458,13 +525,16 @@ const ChequeVoucherPage = () => {
                     type="file"
                     accept="image/*"
                     onChange={(e) => {
-                      const file = e.target.files?.[0]
+                      const file = e.target.files?.[0];
                       if (file) {
-                        const reader = new FileReader()
+                        const reader = new FileReader();
                         reader.onload = (event) => {
-                          updateFormData("signature", event.target?.result as string)
-                        }
-                        reader.readAsDataURL(file)
+                          updateFormData(
+                            "signature",
+                            event.target?.result as string
+                          );
+                        };
+                        reader.readAsDataURL(file);
                       }
                     }}
                   />
@@ -477,7 +547,9 @@ const ChequeVoucherPage = () => {
           <Card>
             <CardHeader>
               <CardTitle>Live Preview</CardTitle>
-              <CardDescription>Real-time preview of your cheque voucher</CardDescription>
+              <CardDescription>
+                Real-time preview of your cheque voucher
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div
@@ -492,7 +564,7 @@ const ChequeVoucherPage = () => {
         </div>
       </main>
     </div>
-  )
-}
+  );
+};
 
-export default ChequeVoucherPage
+export default ChequeVoucherPage;

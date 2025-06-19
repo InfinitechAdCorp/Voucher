@@ -1,31 +1,33 @@
-"use client"
+"use client";
 
-import type { ChequeVoucherFormData } from "@/types/cheque-voucher"
+import type { ChequeVoucherFormData } from "@/types/cheque-voucher";
 
 interface ChequeVoucherPreviewProps {
-  formData: ChequeVoucherFormData
+  formData: ChequeVoucherFormData;
 }
 
-export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewProps) {
+export default function ChequeVoucherPreview({
+  formData,
+}: ChequeVoucherPreviewProps) {
   const formatAmount = (amount: string) => {
-    const num = Number.parseFloat(amount || "0")
-    const formatted = num.toLocaleString("en-US", { minimumFractionDigits: 2 })
-    const parts = formatted.split(".")
-    return { main: parts[0], cents: parts[1] || "00" }
-  }
+    const num = Number.parseFloat(amount || "0");
+    const formatted = num.toLocaleString("en-US", { minimumFractionDigits: 2 });
+    const parts = formatted.split(".");
+    return { main: parts[0], cents: parts[1] || "00" };
+  };
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return "___________"
-    const date = new Date(dateString)
+    if (!dateString) return "___________";
+    const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
-    }).format(date)
-  }
+    }).format(date);
+  };
 
-  const totalAmount = Number.parseFloat(formData.amount || "0")
-  const totalParts = formatAmount(totalAmount.toString())
+  const totalAmount = Number.parseFloat(formData.amount || "0");
+  const totalParts = formatAmount(totalAmount.toString());
 
   return (
     <div
@@ -60,8 +62,8 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
               }}
               crossOrigin="anonymous"
               onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.style.display = "none"
+                const target = e.target as HTMLImageElement;
+                target.style.display = "none";
               }}
             />
           </div>
@@ -234,7 +236,8 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
               }}
             >
               <div className="mb-2">
-                <strong>Cheque No:</strong> {formData.cheque_no || "Auto-generated on save"}
+                <strong>Cheque No:</strong>{" "}
+                {formData.cheque_no || "Auto-generated on save"}
               </div>
               <div className="mb-2">
                 <strong>Pay To:</strong> {formData.pay_to}
@@ -244,7 +247,11 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
               </div>
               <div className="mb-2">
                 <strong>Amount:</strong>{" "}
-                {formData.amount ? `₱${formatAmount(formData.amount).main}.${formatAmount(formData.amount).cents}` : ""}
+                {formData.amount
+                  ? `₱${formatAmount(formData.amount).main}.${
+                      formatAmount(formData.amount).cents
+                    }`
+                  : ""}
               </div>
             </div>
           </div>
@@ -261,7 +268,11 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
               justifyContent: "flex-start",
             }}
           >
-            {formData.amount ? `₱${formatAmount(formData.amount).main}.${formatAmount(formData.amount).cents}` : ""}
+            {formData.amount
+              ? `₱${formatAmount(formData.amount).main}.${
+                  formatAmount(formData.amount).cents
+                }`
+              : ""}
           </div>
         </div>
 
@@ -360,8 +371,8 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
                     }}
                     crossOrigin="anonymous"
                     onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.style.display = "none"
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
                     }}
                   />
                 ) : (
@@ -452,7 +463,9 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
                     color: "#000000",
                   }}
                 >
-                  {formatDate(formData.approved_date) !== "___________" ? formatDate(formData.approved_date) : ""}
+                  {formatDate(formData.approved_date) !== "___________"
+                    ? formatDate(formData.approved_date)
+                    : ""}
                 </span>
               </div>
             </div>
@@ -460,5 +473,5 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
         </div>
       </div>
     </div>
-  )
+  );
 }

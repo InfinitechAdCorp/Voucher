@@ -16,3 +16,17 @@ export interface VoucherFormData {
   approved_name: string
   approved_date: string
 }
+export interface Account {
+  id: number
+  account_number: string
+  account_name: string
+  account_type: 'asset' | 'liability' | 'equity' | 'revenue' | 'expense' | 'owner'
+  balance: number
+  created_at?: string
+  updated_at?: string
+}
+export interface IconSvgProps extends React.SVGProps<SVGSVGElement> {
+  size?: number;
+  width?: number;
+  height?: number;
+}

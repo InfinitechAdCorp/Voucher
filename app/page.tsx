@@ -1,4 +1,4 @@
-import { LoginForm } from "@/components/auth/login-form"
+import { LoginForm } from "@/components/auth/login-form";
 
 export default function HomePage() {
   return (
@@ -11,5 +11,5 @@ export default function HomePage() {
         <LoginForm />
       </div>
     </div>
-  )
+  );
 }

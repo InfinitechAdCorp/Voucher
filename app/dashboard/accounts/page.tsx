@@ -1,46 +1,64 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Receipt, FileText } from "lucide-react"
-import Link from "next/link"
-import SidebarLayout from "@/components/layout/sidebar-layout"
-import api from "@/lib/api"
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Receipt, FileText } from "lucide-react";
+import Link from "next/link";
+import SidebarLayout from "@/components/layout/sidebar-layout";
+import api from "@/lib/api";
 
 interface Account {
-  id: number
-  account_name: string
-  account_number: string
-  created_at: string
+  id: number;
+  account_name: string;
+  account_number: string;
+  created_at: string;
 }
 
 export default function AccountsPage() {
-  const [accounts, setAccounts] = useState<Account[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchAccounts()
-  }, [])
+    fetchAccounts();
+  }, []);
 
   const fetchAccounts = async () => {
     try {
-      const data = await api.getAccounts()
-      setAccounts(data.accounts)
+      const data = await api.getAccounts();
+      setAccounts(data.accounts);
     } catch (error) {
-      console.error("Error fetching accounts:", error)
+      console.error("Error fetching accounts:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <SidebarLayout title="Accounts" description="Manage your accounting accounts">
+    <SidebarLayout
+      title="Accounts"
+      description="Manage your accounting accounts"
+    >
       <Card>
         <CardHeader>
           <CardTitle>Your Accounts</CardTitle>
-          <CardDescription>Select an account to create vouchers</CardDescription>
+          <CardDescription>
+            Select an account to create vouchers
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -65,9 +83,13 @@ export default function AccountsPage() {
               <TableBody>
                 {accounts.map((account) => (
                   <TableRow key={account.id}>
-                    <TableCell className="font-medium">{account.account_name}</TableCell>
+                    <TableCell className="font-medium">
+                      {account.account_name}
+                    </TableCell>
                     <TableCell>{account.account_number}</TableCell>
-                    <TableCell>{new Date(account.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      {new Date(account.created_at).toLocaleDateString()}
+                    </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
                         <Link href={`/cash-voucher?account_id=${account.id}`}>
@@ -92,5 +114,5 @@ export default function AccountsPage() {
         </CardContent>
       </Card>
     </SidebarLayout>
-  )
+  );
 }

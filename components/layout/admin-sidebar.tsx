@@ -1,37 +1,37 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, Home, Receipt, Building2, Settings, LogOut } from "lucide-react"
-import { removeStoredUser, removeAuthToken, getStoredUser } from "@/lib/auth"
-import { useToast } from "@/hooks/use-toast"
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, Home, Receipt, Building2, Settings, LogOut } from "lucide-react";
+import { removeStoredUser, removeAuthToken, getStoredUser } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: Home },
   { name: "Accounts", href: "/admin/accounts", icon: Building2 },
   { name: "Cash Vouchers", href: "/admin/vouchers", icon: Receipt },
   { name: "Settings", href: "/admin/settings", icon: Settings },
-]
+];
 
 export default function AdminSidebar() {
-  const pathname = usePathname()
-  const router = useRouter()
-  const { toast } = useToast()
-  const [open, setOpen] = useState(false)
-  const user = getStoredUser()
+  const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const user = getStoredUser();
 
   const handleLogout = () => {
-    removeStoredUser()
-    removeAuthToken()
+    removeStoredUser();
+    removeAuthToken();
     toast({
       title: "Logged out",
       description: "You have been successfully logged out.",
-    })
-    router.push("/login")
-  }
+    });
+    router.push("/login");
+  };
 
   const SidebarContent = () => (
     <div className="flex h-full flex-col">
@@ -41,8 +41,8 @@ export default function AdminSidebar() {
 
       <div className="flex-1 space-y-1 p-4">
         {navigation.map((item) => {
-          const Icon = item.icon
-          const isActive = pathname === item.href
+          const Icon = item.icon;
+          const isActive = pathname === item.href;
 
           return (
             <Link
@@ -58,7 +58,7 @@ export default function AdminSidebar() {
               <Icon className="h-4 w-4" />
               <span>{item.name}</span>
             </Link>
-          )
+          );
         })}
       </div>
 
@@ -73,7 +73,7 @@ export default function AdminSidebar() {
         </Button>
       </div>
     </div>
-  )
+  );
 
   return (
     <>
@@ -94,5 +94,5 @@ export default function AdminSidebar() {
         <SidebarContent />
       </div>
     </>
-  )
+  );
 }

@@ -1,47 +1,53 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft } from "lucide-react"
-import Link from "next/link"
-import api from "@/lib/api"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import api from "@/lib/api";
 
 export default function CreateAccountPage() {
-  const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setIsLoading(true)
+    event.preventDefault();
+    setIsLoading(true);
 
-    const formData = new FormData(event.currentTarget)
-    const account_name = formData.get("account_name") as string
-    const account_number = formData.get("account_number") as string
+    const formData = new FormData(event.currentTarget);
+    const account_name = formData.get("account_name") as string;
+    const account_number = formData.get("account_number") as string;
 
     try {
-      const data = await api.createAccount(account_name, account_number)
+      const data = await api.createAccount(account_name, account_number);
 
       toast({
         title: "Account created successfully",
         description: `Account ${account_name} has been created`,
-      })
-      router.push("/dashboard/accounts")
+      });
+      router.push("/dashboard/accounts");
     } catch (error: any) {
       toast({
         title: "Failed to create account",
         description: error.message || "Something went wrong",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -57,7 +63,9 @@ export default function CreateAccountPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Create Account
+              </h1>
               <p className="text-gray-600">Add a new accounting account</p>
             </div>
           </div>
@@ -68,7 +76,9 @@ export default function CreateAccountPage() {
         <Card>
           <CardHeader>
             <CardTitle>New Account Details</CardTitle>
-            <CardDescription>Enter the details for the new accounting account</CardDescription>
+            <CardDescription>
+              Enter the details for the new accounting account
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -100,5 +110,5 @@ export default function CreateAccountPage() {
         </Card>
       </main>
     </div>
-  )
+  );
 }

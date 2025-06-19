@@ -1,70 +1,87 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useEffect, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { FileText, Receipt, LogOut, Menu, X, Home, PlusCircle, CreditCard, DollarSign, Users, Settings, ChevronDown } from 'lucide-react'
-import Link from "next/link"
-import { cn } from "@/lib/utils"
+import type React from "react";
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  FileText,
+  Receipt,
+  LogOut,
+  Menu,
+  X,
+  Home,
+  PlusCircle,
+  CreditCard,
+  DollarSign,
+  Users,
+  Settings,
+  ChevronDown,
+} from "lucide-react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface User {
-  id: number
-  name: string
-  email: string
-  role: string
+  id: number;
+  name: string;
+  email: string;
+  role: string;
 }
 
 interface NavItem {
-  title: string
-  href: string
-  icon: React.ReactNode
-  isActive?: boolean
-  children?: NavItem[]
+  title: string;
+  href: string;
+  icon: React.ReactNode;
+  isActive?: boolean;
+  children?: NavItem[];
 }
 
 interface SidebarLayoutProps {
-  children: React.ReactNode
-  title: string
-  description?: string
+  children: React.ReactNode;
+  title: string;
+  description?: string;
 }
 
-export default function SidebarLayout({ children, title, description }: SidebarLayoutProps) {
-  const [user, setUser] = useState<User | null>(null)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [activeSection, setActiveSection] = useState<string | null>(null)
-  const router = useRouter()
-  const pathname = usePathname()
+export default function SidebarLayout({
+  children,
+  title,
+  description,
+}: SidebarLayoutProps) {
+  const [user, setUser] = useState<User | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    const userData = localStorage.getItem("user")
+    const userData = localStorage.getItem("user");
     if (!userData) {
-      router.push("/")
-      return
+      router.push("/");
+      return;
     }
 
-    const parsedUser = JSON.parse(userData)
+    const parsedUser = JSON.parse(userData);
     if (parsedUser.role !== "accounting") {
-      router.push("/")
-      return
+      router.push("/");
+      return;
     }
 
-    setUser(parsedUser)
-  }, [router])
+    setUser(parsedUser);
+  }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("user")
-    router.push("/")
-  }
+    localStorage.removeItem("user");
+    router.push("/");
+  };
 
   const toggleSection = (section: string) => {
-    setActiveSection(activeSection === section ? null : section)
-  }
+    setActiveSection(activeSection === section ? null : section);
+  };
 
   const isActivePath = (path: string) => {
-    return pathname === path
-  }
+    return pathname === path;
+  };
 
   const navigation: NavItem[] = [
     {
@@ -130,7 +147,7 @@ export default function SidebarLayout({ children, title, description }: SidebarL
         },
       ],
     },
-  ]
+  ];
 
   if (!user) {
     return (
@@ -140,7 +157,7 @@ export default function SidebarLayout({ children, title, description }: SidebarL
           <div className="h-4 w-32 bg-gray-200 rounded"></div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -149,22 +166,37 @@ export default function SidebarLayout({ children, title, description }: SidebarL
       <div className="lg:hidden fixed top-0 left-0 z-40 w-full bg-white shadow-sm p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900">ABIC Realty</h1>
-          <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
           </Button>
         </div>
       </div>
 
       {/* Mobile sidebar */}
       {mobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-30 bg-black/50" onClick={() => setMobileMenuOpen(false)}>
+        <div
+          className="lg:hidden fixed inset-0 z-30 bg-black/50"
+          onClick={() => setMobileMenuOpen(false)}
+        >
           <div
             className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg p-4 overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-xl font-bold text-gray-900">ABIC Realty</h1>
-              <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 <X className="h-5 w-5" />
               </Button>
             </div>
@@ -183,7 +215,8 @@ export default function SidebarLayout({ children, title, description }: SidebarL
                         </div>
                         <ChevronDown
                           className={cn("h-4 w-4 transition-transform", {
-                            "transform rotate-180": activeSection === item.title,
+                            "transform rotate-180":
+                              activeSection === item.title,
                           })}
                         />
                       </button>
@@ -229,14 +262,22 @@ export default function SidebarLayout({ children, title, description }: SidebarL
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
               <div className="flex items-center mb-4">
                 <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-sm font-medium text-gray-600">{user.name.charAt(0).toUpperCase()}</span>
+                  <span className="text-sm font-medium text-gray-600">
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-700">{user.name}</p>
+                  <p className="text-sm font-medium text-gray-700">
+                    {user.name}
+                  </p>
                   <p className="text-xs text-gray-500">{user.email}</p>
                 </div>
               </div>
-              <Button onClick={handleLogout} variant="outline" className="w-full justify-start">
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="w-full justify-start"
+              >
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
               </Button>
@@ -260,7 +301,11 @@ export default function SidebarLayout({ children, title, description }: SidebarL
               <span className="text-xl font-bold">AR</span>
             </div>
           )}
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
             <Menu className="h-5 w-5" />
           </Button>
         </div>
@@ -281,12 +326,15 @@ export default function SidebarLayout({ children, title, description }: SidebarL
                     >
                       <div className="flex items-center">
                         {item.icon}
-                        {sidebarOpen && <span className="ml-3">{item.title}</span>}
+                        {sidebarOpen && (
+                          <span className="ml-3">{item.title}</span>
+                        )}
                       </div>
                       {sidebarOpen && (
                         <ChevronDown
                           className={cn("h-4 w-4 transition-transform", {
-                            "transform rotate-180": activeSection === item.title,
+                            "transform rotate-180":
+                              activeSection === item.title,
                           })}
                         />
                       )}
@@ -334,20 +382,33 @@ export default function SidebarLayout({ children, title, description }: SidebarL
             <>
               <div className="flex items-center mb-4">
                 <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-sm font-medium text-gray-600">{user.name.charAt(0).toUpperCase()}</span>
+                  <span className="text-sm font-medium text-gray-600">
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-700">{user.name}</p>
+                  <p className="text-sm font-medium text-gray-700">
+                    {user.name}
+                  </p>
                   <p className="text-xs text-gray-500">{user.email}</p>
                 </div>
               </div>
-              <Button onClick={handleLogout} variant="outline" className="w-full justify-start">
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="w-full justify-start"
+              >
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
               </Button>
             </>
           ) : (
-            <Button onClick={handleLogout} variant="outline" size="icon" className="w-full">
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              size="icon"
+              className="w-full"
+            >
               <LogOut className="h-4 w-4" />
             </Button>
           )}
@@ -355,7 +416,13 @@ export default function SidebarLayout({ children, title, description }: SidebarL
       </div>
 
       {/* Main content */}
-      <div className={cn("flex-1 transition-all duration-300", sidebarOpen ? "lg:ml-64" : "lg:ml-20", "mt-16 lg:mt-0")}>
+      <div
+        className={cn(
+          "flex-1 transition-all duration-300",
+          sidebarOpen ? "lg:ml-64" : "lg:ml-20",
+          "mt-16 lg:mt-0"
+        )}
+      >
         <header className="bg-white shadow">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="py-6">
@@ -365,8 +432,10 @@ export default function SidebarLayout({ children, title, description }: SidebarL
           </div>
         </header>
 
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          {children}
+        </main>
       </div>
     </div>
-  )
+  );
 }

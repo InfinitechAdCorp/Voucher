@@ -1,38 +1,43 @@
-"use client"
+"use client";
 
-import type { VoucherFormData } from "@/types"
+import type { VoucherFormData } from "@/types";
 
 interface CashVoucherPreviewProps {
-  formData: VoucherFormData
+  formData: VoucherFormData;
 }
 
-export default function CashVoucherPreview({ formData }: CashVoucherPreviewProps) {
+export default function CashVoucherPreview({
+  formData,
+}: CashVoucherPreviewProps) {
   const formatAmount = (amount: string) => {
-    const num = Number.parseFloat(amount || "0")
-    const formatted = num.toLocaleString("en-US", { minimumFractionDigits: 2 })
-    const parts = formatted.split(".")
-    return { main: parts[0], cents: parts[1] || "00" }
-  }
+    const num = Number.parseFloat(amount || "0");
+    const formatted = num.toLocaleString("en-US", { minimumFractionDigits: 2 });
+    const parts = formatted.split(".");
+    return { main: parts[0], cents: parts[1] || "00" };
+  };
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return "___________"
-    const date = new Date(dateString)
+    if (!dateString) return "___________";
+    const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
-    }).format(date)
-  }
+    }).format(date);
+  };
 
   const calculateTotal = () => {
     if (formData.particulars_items && formData.particulars_items.length > 0) {
-      return formData.particulars_items.reduce((sum, item) => sum + Number.parseFloat(item.amount || "0"), 0)
+      return formData.particulars_items.reduce(
+        (sum, item) => sum + Number.parseFloat(item.amount || "0"),
+        0
+      );
     }
-    return Number.parseFloat(formData.amount || "0")
-  }
+    return Number.parseFloat(formData.amount || "0");
+  };
 
-  const totalAmount = calculateTotal()
-  const totalParts = formatAmount(totalAmount.toString())
+  const totalAmount = calculateTotal();
+  const totalParts = formatAmount(totalAmount.toString());
 
   return (
     <div
@@ -67,8 +72,8 @@ export default function CashVoucherPreview({ formData }: CashVoucherPreviewProps
               }}
               crossOrigin="anonymous"
               onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.style.display = "none"
+                const target = e.target as HTMLImageElement;
+                target.style.display = "none";
               }}
             />
           </div>
@@ -266,7 +271,7 @@ export default function CashVoucherPreview({ formData }: CashVoucherPreviewProps
         {/* Particulars Items */}
         {formData.particulars_items && formData.particulars_items.length > 0 ? (
           formData.particulars_items.map((item, index) => {
-            const itemAmount = formatAmount(item.amount || "0")
+            const itemAmount = formatAmount(item.amount || "0");
             return (
               <div
                 key={index}
@@ -342,7 +347,7 @@ export default function CashVoucherPreview({ formData }: CashVoucherPreviewProps
                   </div>
                 </div>
               </div>
-            )
+            );
           })
         ) : (
           <div
@@ -407,7 +412,9 @@ export default function CashVoucherPreview({ formData }: CashVoucherPreviewProps
                     alignItems: "flex-start",
                   }}
                 >
-                  {formData.amount ? `₱${formatAmount(formData.amount).main}` : ""}
+                  {formData.amount
+                    ? `₱${formatAmount(formData.amount).main}`
+                    : ""}
                 </div>
                 <div
                   className="p-2 text-left arial-narrow-font"
@@ -421,7 +428,9 @@ export default function CashVoucherPreview({ formData }: CashVoucherPreviewProps
                     alignItems: "flex-start",
                   }}
                 >
-                  {formData.amount ? `.${formatAmount(formData.amount).cents}` : ""}
+                  {formData.amount
+                    ? `.${formatAmount(formData.amount).cents}`
+                    : ""}
                 </div>
               </div>
             </div>
@@ -545,8 +554,8 @@ export default function CashVoucherPreview({ formData }: CashVoucherPreviewProps
                     }}
                     crossOrigin="anonymous"
                     onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.style.display = "none"
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
                     }}
                   />
                 ) : (
@@ -660,8 +669,8 @@ export default function CashVoucherPreview({ formData }: CashVoucherPreviewProps
                     }}
                     crossOrigin="anonymous"
                     onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.style.display = "none"
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = "none";
                     }}
                   />
                 ) : (
@@ -758,5 +767,5 @@ export default function CashVoucherPreview({ formData }: CashVoucherPreviewProps
         </div>
       </div>
     </div>
-  )
+  );
 }
