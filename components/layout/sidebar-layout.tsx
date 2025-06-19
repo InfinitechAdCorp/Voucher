@@ -4,20 +4,7 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  FileText,
-  Receipt,
-  LogOut,
-  Menu,
-  X,
-  Home,
-  PlusCircle,
-  CreditCard,
-  DollarSign,
-  Users,
-  Settings,
-  ChevronDown,
-} from "lucide-react";
+import { FileText, Receipt, LogOut, Menu, X, Home, PlusCircle, CreditCard, DollarSign, Users, Settings, ChevronDown } from 'lucide-react';
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 

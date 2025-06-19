@@ -311,188 +311,177 @@ const ChequeVoucherPageContent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-6">
-            <div className="flex items-center">
-              <Link href="/dashboard/accounts" className="mr-4">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Accounts
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Cheque Voucher</h1>
-                <p className="text-gray-600">Create and preview cheque voucher</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={saveVoucher} variant="outline" disabled={isSaving}>
-                {isSaving ? "Saving..." : "Save Voucher"}
-              </Button>
-              <Button onClick={exportAsJPEG} disabled={isExporting} className="flex items-center">
-                <Download className="h-4 w-4 mr-2" />
-                {isExporting ? "Exporting..." : "Export as JPEG"}
-              </Button>
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Action buttons - moved to top */}
+      <div className="flex items-center justify-between">
+        <Link href="/dashboard/accounts">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Accounts
+          </Button>
+        </Link>
+        <div className="flex gap-2">
+          <Button onClick={saveVoucher} variant="outline" disabled={isSaving}>
+            {isSaving ? "Saving..." : "Save Voucher"}
+          </Button>
+          <Button onClick={exportAsJPEG} disabled={isExporting} className="flex items-center">
+            <Download className="h-4 w-4 mr-2" />
+            {isExporting ? "Exporting..." : "Export as JPEG"}
+          </Button>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Form Section - Improved Layout */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Cheque Voucher Details</CardTitle>
-              <CardDescription>Fill in the cheque voucher information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Basic Information Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Basic Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="account_no">Account No.</Label>
-                    <Input
-                      id="account_no"
-                      value={formData.account_no}
-                      onChange={(e) => updateFormData("account_no", e.target.value)}
-                      placeholder="Enter account number"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="date">Date</Label>
-                    <Input
-                      id="date"
-                      type="date"
-                      value={formData.date}
-                      onChange={(e) => updateFormData("date", e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="paid_to">Paid to</Label>
-                    <Input
-                      id="paid_to"
-                      value={formData.paid_to}
-                      onChange={(e) => updateFormData("paid_to", e.target.value)}
-                      placeholder="Enter recipient name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cheque_no">Cheque No.</Label>
-                    <Input
-                      id="cheque_no"
-                      value={isLoadingNumber ? "Loading..." : formData.cheque_no}
-                      disabled
-                      placeholder="Loading next number..."
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Cheque Details Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Cheque Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="pay_to">Pay To</Label>
-                    <Input
-                      id="pay_to"
-                      value={formData.pay_to}
-                      onChange={(e) => updateFormData("pay_to", e.target.value)}
-                      placeholder="Enter payee name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cheque_date">Cheque Date</Label>
-                    <Input
-                      id="cheque_date"
-                      type="date"
-                      value={formData.cheque_date}
-                      onChange={(e) => updateFormData("cheque_date", e.target.value)}
-                    />
-                  </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Form Section - Improved Layout */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Cheque Voucher Details</CardTitle>
+            <CardDescription>Fill in the cheque voucher information</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Basic Information Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Basic Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="account_no">Account No.</Label>
+                  <Input
+                    id="account_no"
+                    value={formData.account_no}
+                    onChange={(e) => updateFormData("account_no", e.target.value)}
+                    placeholder="Enter account number"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount</Label>
+                  <Label htmlFor="date">Date</Label>
                   <Input
-                    id="amount"
-                    value={formData.amount}
-                    onChange={(e) => updateFormData("amount", e.target.value)}
-                    placeholder="500000.00"
-                    type="number"
-                    step="0.01"
+                    id="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => updateFormData("date", e.target.value)}
                   />
                 </div>
               </div>
-
-              {/* Approval Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Approval Information</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="printed_name">Printed Name</Label>
-                    <Input
-                      id="printed_name"
-                      value={formData.printed_name}
-                      onChange={(e) => updateFormData("printed_name", e.target.value)}
-                      placeholder="Enter printed name"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="approved_date">Approved Date</Label>
-                    <Input
-                      id="approved_date"
-                      type="date"
-                      value={formData.approved_date}
-                      onChange={(e) => updateFormData("approved_date", e.target.value)}
-                    />
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="paid_to">Paid to</Label>
+                  <Input
+                    id="paid_to"
+                    value={formData.paid_to}
+                    onChange={(e) => updateFormData("paid_to", e.target.value)}
+                    placeholder="Enter recipient name"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signature">Signature</Label>
+                  <Label htmlFor="cheque_no">Cheque No.</Label>
                   <Input
-                    id="signature"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) {
-                        const reader = new FileReader()
-                        reader.onload = (event) => {
-                          updateFormData("signature", event.target?.result as string)
-                        }
-                        reader.readAsDataURL(file)
+                    id="cheque_no"
+                    value={isLoadingNumber ? "Loading..." : formData.cheque_no}
+                    disabled
+                    placeholder="Loading next number..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Cheque Details Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Cheque Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="pay_to">Pay To</Label>
+                  <Input
+                    id="pay_to"
+                    value={formData.pay_to}
+                    onChange={(e) => updateFormData("pay_to", e.target.value)}
+                    placeholder="Enter payee name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cheque_date">Cheque Date</Label>
+                  <Input
+                    id="cheque_date"
+                    type="date"
+                    value={formData.cheque_date}
+                    onChange={(e) => updateFormData("cheque_date", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount</Label>
+                <Input
+                  id="amount"
+                  value={formData.amount}
+                  onChange={(e) => updateFormData("amount", e.target.value)}
+                  placeholder="500000.00"
+                  type="number"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            {/* Approval Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Approval Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="printed_name">Printed Name</Label>
+                  <Input
+                    id="printed_name"
+                    value={formData.printed_name}
+                    onChange={(e) => updateFormData("printed_name", e.target.value)}
+                    placeholder="Enter printed name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="approved_date">Approved Date</Label>
+                  <Input
+                    id="approved_date"
+                    type="date"
+                    value={formData.approved_date}
+                    onChange={(e) => updateFormData("approved_date", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signature">Signature</Label>
+                <Input
+                  id="signature"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      const reader = new FileReader()
+                      reader.onload = (event) => {
+                        updateFormData("signature", event.target?.result as string)
                       }
-                    }}
-                  />
-                </div>
+                      reader.readAsDataURL(file)
+                    }
+                  }}
+                />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Preview Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Live Preview</CardTitle>
-              <CardDescription>Real-time preview of your cheque voucher</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div
-                ref={previewRef}
-                className="border border-gray-300 p-4 bg-white voucher-container"
-                data-voucher-container
-              >
-                <ChequeVoucherPreview formData={formData} />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+        {/* Preview Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Live Preview</CardTitle>
+            <CardDescription>Real-time preview of your cheque voucher</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div
+              ref={previewRef}
+              className="border border-gray-300 p-4 bg-white voucher-container"
+              data-voucher-container
+            >
+              <ChequeVoucherPreview formData={formData} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
