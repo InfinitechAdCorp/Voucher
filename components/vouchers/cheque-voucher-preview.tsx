@@ -1,33 +1,31 @@
-"use client";
+"use client"
 
-import type { ChequeVoucherFormData } from "@/types/cheque-voucher";
+import type { ChequeVoucherFormData } from "@/types/cheque-voucher"
 
 interface ChequeVoucherPreviewProps {
-  formData: ChequeVoucherFormData;
+  formData: ChequeVoucherFormData
 }
 
-export default function ChequeVoucherPreview({
-  formData,
-}: ChequeVoucherPreviewProps) {
+export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewProps) {
   const formatAmount = (amount: string) => {
-    const num = Number.parseFloat(amount || "0");
-    const formatted = num.toLocaleString("en-US", { minimumFractionDigits: 2 });
-    const parts = formatted.split(".");
-    return { main: parts[0], cents: parts[1] || "00" };
-  };
+    const num = Number.parseFloat(amount || "0")
+    const formatted = num.toLocaleString("en-US", { minimumFractionDigits: 2 })
+    const parts = formatted.split(".")
+    return { main: parts[0], cents: parts[1] || "00" }
+  }
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return "___________";
-    const date = new Date(dateString);
+    if (!dateString) return "___________"
+    const date = new Date(dateString)
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
-    }).format(date);
-  };
+    }).format(date)
+  }
 
-  const totalAmount = Number.parseFloat(formData.amount || "0");
-  const totalParts = formatAmount(totalAmount.toString());
+  const totalAmount = Number.parseFloat(formData.amount || "0")
+  const totalParts = formatAmount(totalAmount.toString())
 
   return (
     <div
@@ -62,8 +60,8 @@ export default function ChequeVoucherPreview({
               }}
               crossOrigin="anonymous"
               onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = "none";
+                const target = e.target as HTMLImageElement
+                target.style.display = "none"
               }}
             />
           </div>
@@ -154,7 +152,7 @@ export default function ChequeVoucherPreview({
         </div>
       </div>
 
-      {/* Cheque Details Table */}
+      {/* Cheque Details Table - FIXED WITH PROPER VERTICAL LINES */}
       <div
         className="border border-black mb-4"
         style={{
@@ -162,6 +160,7 @@ export default function ChequeVoucherPreview({
           marginBottom: "16px",
         }}
       >
+        {/* Table Header */}
         <div
           style={{
             display: "flex",
@@ -170,20 +169,20 @@ export default function ChequeVoucherPreview({
         >
           <div
             style={{
-              width: "75%",
+              flex: "3",
               fontFamily: "'Times New Roman', serif",
               fontWeight: "300",
               letterSpacing: "3px",
               fontSize: "14px",
               color: "#000000",
-              padding: "0",
+              padding: "8px",
               textAlign: "center",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               minHeight: "50px",
               lineHeight: "1",
-              borderRight: "1px solid #000000",
+              borderRight: "1px solid #000000", // ADDED VERTICAL LINE
             }}
           >
             CHEQUE DETAILS
@@ -191,21 +190,29 @@ export default function ChequeVoucherPreview({
 
           <div
             style={{
-              width: "25%",
+              flex: "1",
+              display: "flex",
               fontFamily: "'Times New Roman', serif",
               fontWeight: "300",
               fontSize: "14px",
               color: "#000000",
-              padding: "0",
-              textAlign: "center",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
               minHeight: "50px",
-              lineHeight: "1",
             }}
           >
-            Amount
+            <div
+              style={{
+                flex: "3",
+                padding: "8px",
+                textAlign: "center",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRight: "1px solid #000000",
+              }}
+            >
+              Amount
+            </div>
+            
           </div>
         </div>
 
@@ -219,9 +226,9 @@ export default function ChequeVoucherPreview({
         >
           <div
             style={{
-              width: "75%",
+              flex: "3",
               padding: "8px",
-              borderRight: "1px solid #000000",
+              borderRight: "1px solid #000000", // ADDED VERTICAL LINE
             }}
           >
             <div
@@ -236,8 +243,7 @@ export default function ChequeVoucherPreview({
               }}
             >
               <div className="mb-2">
-                <strong>Cheque No:</strong>{" "}
-                {formData.cheque_no || "Auto-generated on save"}
+                <strong>Cheque No:</strong> {formData.cheque_no || "Auto-generated on save"}
               </div>
               <div className="mb-2">
                 <strong>Pay To:</strong> {formData.pay_to}
@@ -245,34 +251,53 @@ export default function ChequeVoucherPreview({
               <div className="mb-2">
                 <strong>Date:</strong> {formatDate(formData.cheque_date)}
               </div>
-              <div className="mb-2">
-                <strong>Amount:</strong>{" "}
-                {formData.amount
-                  ? `₱${formatAmount(formData.amount).main}.${
-                      formatAmount(formData.amount).cents
-                    }`
-                  : ""}
-              </div>
+             <div className="mb-2">
+  <strong>Amount:</strong>{" "}
+  {formData.amount ? (
+    <span className="inline-flex items-center">
+      {formatAmount(formData.amount).main}.{formatAmount(formData.amount).cents}
+    </span>
+  ) : (
+    ""
+  )}
+</div>
+
             </div>
           </div>
           <div
             style={{
-              width: "25%",
-              padding: "8px",
-              textAlign: "right",
+              flex: "1",
+              display: "flex",
               fontFamily: "'Arial Narrow', Arial, sans-serif",
               fontSize: "12px",
               color: "#000000",
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "flex-start",
             }}
           >
-            {formData.amount
-              ? `₱${formatAmount(formData.amount).main}.${
-                  formatAmount(formData.amount).cents
-                }`
-              : ""}
+            <div
+              style={{
+                flex: "3",
+                padding: "8px",
+                textAlign: "right",
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "flex-start",
+                borderRight: "1px solid #000000",
+              }}
+            >
+              {formData.amount ? `${formatAmount(formData.amount).main}` : ""}
+            </div>
+            <div
+              style={{
+                flex: "1",
+                padding: "8px",
+                textAlign: "left",
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "flex-start",
+              }}
+            >
+              {formData.amount ? `.${formatAmount(formData.amount).cents}` : ""}
+            </div>
           </div>
         </div>
 
@@ -280,37 +305,58 @@ export default function ChequeVoucherPreview({
         <div
           style={{
             display: "flex",
+           
           }}
         >
           <div
             style={{
-              width: "75%",
+              flex: "3",
               fontFamily: "'Times New Roman', serif",
               fontWeight: "300",
               fontSize: "14px",
               color: "#000000",
               padding: "8px",
               textAlign: "right",
-              borderRight: "1px solid #000000",
+              borderRight: "1px solid #000000", // ADDED VERTICAL LINE
             }}
           >
             TOTAL ₱
           </div>
           <div
             style={{
-              width: "25%",
+              flex: "1",
+              display: "flex",
               fontFamily: "'Arial Narrow', Arial, sans-serif",
               fontSize: "14px",
               fontWeight: "bold",
               color: "#000000",
-              padding: "8px",
-              textAlign: "right",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-start",
             }}
           >
-            {totalParts.main}.{totalParts.cents}
+            <div
+              style={{
+                flex: "3",
+                padding: "8px",
+                textAlign: "right",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                borderRight: "1px solid #000000",
+              }}
+            >
+              {totalParts.main}
+            </div>
+            <div
+              style={{
+                flex: "1",
+                padding: "8px",
+                textAlign: "left",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+              }}
+            >
+              .{totalParts.cents}
+            </div>
           </div>
         </div>
       </div>
@@ -371,8 +417,8 @@ export default function ChequeVoucherPreview({
                     }}
                     crossOrigin="anonymous"
                     onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = "none";
+                      const target = e.target as HTMLImageElement
+                      target.style.display = "none"
                     }}
                   />
                 ) : (
@@ -383,7 +429,9 @@ export default function ChequeVoucherPreview({
                       fontSize: "12px",
                       color: "#666666",
                     }}
-                  ></span>
+                  >
+                    Signature will appear here
+                  </span>
                 )}
               </div>
             </div>
@@ -463,9 +511,7 @@ export default function ChequeVoucherPreview({
                     color: "#000000",
                   }}
                 >
-                  {formatDate(formData.approved_date) !== "___________"
-                    ? formatDate(formData.approved_date)
-                    : ""}
+                  {formatDate(formData.approved_date) !== "___________" ? formatDate(formData.approved_date) : ""}
                 </span>
               </div>
             </div>
@@ -473,5 +519,5 @@ export default function ChequeVoucherPreview({
         </div>
       </div>
     </div>
-  );
+  )
 }

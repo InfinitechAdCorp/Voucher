@@ -1,9 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PlusCircle, DollarSign, FileText, Users } from "lucide-react";
+import {
+  PlusCircle,
+  Users,
+  CreditCard,
+  Banknote,
+  AlertCircle,
+
+} from "lucide-react";
 import Link from "next/link";
 import SidebarLayout from "@/components/layout/sidebar-layout";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import api from "@/lib/api";
 
 interface RecentVoucher {
@@ -21,9 +29,12 @@ interface RecentVoucher {
 export default function DashboardPage() {
   const [recentVouchers, setRecentVouchers] = useState<RecentVoucher[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalCashVouchers: 0,
     totalChequeVouchers: 0,
+    totalCashAmount: 0,
+    totalChequeAmount: 0,
     totalAmount: 0,
   });
 
@@ -34,56 +45,76 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setError(null);
 
-      // Fetch recent cash vouchers
-      const cashResponse = await api.getCashVouchers({ per_page: 5 });
-      const cashVouchers = cashResponse.success
-        ? cashResponse.data.data || cashResponse.data
-        : [];
+      console.log("Fetching dashboard data...");
 
-      // Fetch recent cheque vouchers
-      const chequeResponse = await api.getChequeVouchers();
-      const chequeVouchers = chequeResponse.success
-        ? chequeResponse.data.data || chequeResponse.data
-        : [];
+      // Use the new dashboard stats method
+      const dashboardResponse = await api.getDashboardStats();
 
-      // Combine and format recent vouchers
-      const recentCash = cashVouchers.slice(0, 3).map((voucher: any) => ({
-        ...voucher,
-        type: "cash" as const,
-      }));
+      console.log("Dashboard Response:", dashboardResponse);
 
-      const recentCheque = chequeVouchers.slice(0, 2).map((voucher: any) => ({
-        ...voucher,
-        type: "cheque" as const,
-      }));
+      if (dashboardResponse.success && dashboardResponse.data) {
+        const data = dashboardResponse.data;
 
-      const combined = [...recentCash, ...recentCheque]
-        .sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )
-        .slice(0, 5);
+        // Set stats
+        setStats({
+          totalCashVouchers: data.totalCashVouchers || 0,
+          totalChequeVouchers: data.totalChequeVouchers || 0,
+          totalCashAmount: data.totalCashAmount || 0,
+          totalChequeAmount: data.totalChequeAmount || 0,
+          totalAmount: data.totalAmount || 0,
+        });
 
-      setRecentVouchers(combined);
+        // Combine recent vouchers
+        const recentCash = (data.cashVouchers || [])
+          .slice(0, 3)
+          .map((voucher: any) => ({
+            ...voucher,
+            type: "cash" as const,
+            amount: Number.parseFloat(voucher.amount) || 0,
+          }));
 
-      // Calculate stats
-      const totalCashAmount = cashVouchers.reduce(
-        (sum: number, voucher: any) => sum + (voucher.amount || 0),
-        0
-      );
-      const totalChequeAmount = chequeVouchers.reduce(
-        (sum: number, voucher: any) => sum + (voucher.amount || 0),
-        0
-      );
+        const recentCheque = (data.chequeVouchers || [])
+          .slice(0, 2)
+          .map((voucher: any) => ({
+            ...voucher,
+            type: "cheque" as const,
+            amount: Number.parseFloat(voucher.amount) || 0,
+          }));
 
-      setStats({
-        totalCashVouchers: cashVouchers.length,
-        totalChequeVouchers: chequeVouchers.length,
-        totalAmount: totalCashAmount + totalChequeAmount,
-      });
-    } catch (error) {
+        const combined = [...recentCash, ...recentCheque]
+          .sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+          )
+          .slice(0, 5);
+
+        setRecentVouchers(combined);
+
+        console.log("Stats set:", {
+          totalCashVouchers: data.totalCashVouchers,
+          totalChequeVouchers: data.totalChequeVouchers,
+          totalCashAmount: data.totalCashAmount,
+          totalChequeAmount: data.totalChequeAmount,
+        });
+      } else {
+        throw new Error("Invalid response format");
+      }
+    } catch (error: any) {
       console.error("Error fetching dashboard data:", error);
+      setError(error.message || "Failed to load dashboard data");
+
+      // Set default values on error
+      setStats({
+        totalCashVouchers: 0,
+        totalChequeVouchers: 0,
+        totalCashAmount: 0,
+        totalChequeAmount: 0,
+        totalAmount: 0,
+      });
+      setRecentVouchers([]);
     } finally {
       setLoading(false);
     }
@@ -94,10 +125,11 @@ export default function DashboardPage() {
       style: "currency",
       currency: "PHP",
       minimumFractionDigits: 2,
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -123,81 +155,140 @@ export default function DashboardPage() {
     );
   };
 
+  if (loading) {
+    return (
+      <SidebarLayout
+        title="Dashboard"
+        description="Welcome to ABIC Realty Accounting System"
+      >
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading dashboard data...</p>
+          </div>
+        </div>
+      </SidebarLayout>
+    );
+  }
+
   return (
     <SidebarLayout
       title="Dashboard"
       description="Welcome to ABIC Realty Accounting System"
     >
       <div className="px-4 py-6 sm:px-0">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-blue-500 rounded-md p-3">
-                  <DollarSign className="h-6 w-6 text-white" />
-                </div>
-                <div className="ml-5">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Cash Vouchers
-                  </h3>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.totalCashVouchers}
+        {/* Error Alert */}
+        {error && (
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertCircle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
+              {error}. Please check your API connection and try refreshing the
+              page.
+            </AlertDescription>
+          </Alert>
+        )}
+
+       
+      {/* Stats Cards */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+  {/* Cash Vouchers Count */}
+  <div className="bg-white overflow-hidden shadow rounded-lg col-span-1 lg:col-span-2">
+    <div className="p-5">
+      <div className="flex items-center">
+        <div className="flex-shrink-0 bg-blue-500 rounded-md p-3">
+          <Banknote  className="h-8 w-8 text-white" />
+        </div>
+        <div className="ml-5">
+          <h3 className="text-lg font-medium text-gray-900">
+            Cash Vouchers
+          </h3>
+          <p className="text-3xl font-bold text-gray-900">
+            {stats.totalCashVouchers}
+            
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Cheque Vouchers Count */}
+  <div className="bg-white overflow-hidden shadow rounded-lg col-span-1 lg:col-span-2">
+    <div className="p-5">
+      <div className="flex items-center">
+        <div className="flex-shrink-0 bg-purple-500 rounded-md p-3">
+          <Banknote className="h-8 w-8 text-white" />
+        </div>
+        <div className="ml-5">
+          <h3 className="text-lg font-medium text-gray-900">
+            Cheque Vouchers
+          </h3>
+          <p className="text-3xl font-bold text-gray-900">
+            {stats.totalChequeVouchers}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Total Vouchers Count */}
+  <div className="bg-white overflow-hidden shadow rounded-lg col-span-1 lg:col-span-2">
+    <div className="p-5">
+      <div className="flex items-center">
+        <div className="flex-shrink-0 bg-orange-500 rounded-md p-3">
+          <Banknote className="h-8 w-8 text-white" />
+        </div>
+        <div className="ml-5">
+          <h3 className="text-lg font-medium text-gray-900">
+            Total Vouchers
+          </h3>
+          <p className="text-3xl font-bold text-gray-900">
+            {stats.totalCashVouchers + stats.totalChequeVouchers}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+        {/* Summary Cards - Highlighted Cash and Cheque Totals */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Cash Vouchers Summary */}
+          <div className="bg-gradient-to-r from-green-400 to-green-600 overflow-hidden shadow-lg rounded-lg">
+            <div className="p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">Cash Vouchers Total</h3>
+                  <p className="text-3xl font-bold mt-2">
+                    {formatAmount(stats.totalCashAmount)}
                   </p>
+                  <p className="text-green-100 mt-1">
+                    {stats.totalCashVouchers} voucher{stats.totalCashVouchers !== 1 ? "s" : ""}
+
+                  </p>
+                </div>
+                <div className="bg-white bg-opacity-20 rounded-full p-4">
+                  <Banknote className="h-8 w-8 text-white" />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-purple-500 rounded-md p-3">
-                  <FileText className="h-6 w-6 text-white" />
-                </div>
-                <div className="ml-5">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Cheque Vouchers
-                  </h3>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.totalChequeVouchers}
+          {/* Cheque Vouchers Summary */}
+          <div className="bg-gradient-to-r from-indigo-400 to-indigo-600 overflow-hidden shadow-lg rounded-lg">
+            <div className="p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium">Cheque Vouchers Total</h3>
+                  <p className="text-3xl font-bold mt-2">
+                    {formatAmount(stats.totalChequeAmount)}
+                  </p>
+                  <p className="text-indigo-100 mt-1">
+                    {stats.totalChequeVouchers} vouchers
                   </p>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
-                  <DollarSign className="h-6 w-6 text-white" />
-                </div>
-                <div className="ml-5">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Total Amount
-                  </h3>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatAmount(stats.totalAmount)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="p-5">
-              <div className="flex items-center">
-                <div className="flex-shrink-0 bg-orange-500 rounded-md p-3">
-                  <Users className="h-6 w-6 text-white" />
-                </div>
-                <div className="ml-5">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Total Vouchers
-                  </h3>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {stats.totalCashVouchers + stats.totalChequeVouchers}
-                  </p>
+                <div className="bg-white bg-opacity-20 rounded-full p-4">
+                  <CreditCard className="h-8 w-8 text-white" />
                 </div>
               </div>
             </div>
@@ -236,7 +327,7 @@ export default function DashboardPage() {
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
-                  <DollarSign className="h-6 w-6 text-white" />
+                  <Banknote className="h-6 w-6 text-white" />
                 </div>
                 <div className="ml-5">
                   <h3 className="text-lg font-medium text-gray-900">
@@ -262,7 +353,7 @@ export default function DashboardPage() {
             <div className="p-5">
               <div className="flex items-center">
                 <div className="flex-shrink-0 bg-purple-500 rounded-md p-3">
-                  <FileText className="h-6 w-6 text-white" />
+                  <Banknote className="h-6 w-6 text-white" />
                 </div>
                 <div className="ml-5">
                   <h3 className="text-lg font-medium text-gray-900">
@@ -285,15 +376,24 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Refresh Button */}
+        <div className="mb-8">
+          <button
+            onClick={fetchDashboardData}
+            disabled={loading}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+          >
+            {loading ? "Loading..." : "Refresh Data"}
+          </button>
+        </div>
+
         {/* Recent Activity Section */}
         <div className="mt-8">
           <h2 className="text-lg font-medium text-gray-900 mb-4">
             Recent Activity
           </h2>
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
-            {loading ? (
-              <div className="text-center py-8">Loading recent activity...</div>
-            ) : recentVouchers.length === 0 ? (
+            {recentVouchers.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 No recent vouchers found
               </div>
@@ -305,8 +405,12 @@ export default function DashboardPage() {
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium text-blue-600 truncate">
                           {voucher.type === "cash"
-                            ? `Cash Voucher #${voucher.voucher_number}`
-                            : `Cheque Voucher #${voucher.cheque_no}`}
+                            ? `Cash Voucher #${
+                                voucher.voucher_number || voucher.id
+                              }`
+                            : `Cheque Voucher #${
+                                voucher.cheque_no || voucher.id
+                              }`}
                         </p>
                         <div className="ml-2 flex-shrink-0 flex">
                           {voucher.status && getStatusBadge(voucher.status)}
@@ -315,12 +419,12 @@ export default function DashboardPage() {
                       <div className="mt-2 sm:flex sm:justify-between">
                         <div className="sm:flex">
                           <p className="flex items-center text-sm text-gray-500">
-                            <DollarSign className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
+                            <Banknote className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
                             {formatAmount(voucher.amount)}
                           </p>
                           <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
                             <Users className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                            {voucher.paid_to}
+                            {voucher.paid_to || "N/A"}
                           </p>
                         </div>
                         <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">

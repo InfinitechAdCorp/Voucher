@@ -11,6 +11,7 @@ import Link from "next/link"
 import ChequeVoucherPreview from "@/components/vouchers/cheque-voucher-preview"
 import html2canvas from "html2canvas"
 import api from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 import type { ChequeVoucherFormData } from "@/types/cheque-voucher"
 
 const ChequeVoucherPageContent = () => {
@@ -20,6 +21,7 @@ const ChequeVoucherPageContent = () => {
   const [isExporting, setIsExporting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isLoadingNumber, setIsLoadingNumber] = useState(true)
+  const { toast } = useToast()
 
   const [formData, setFormData] = useState<ChequeVoucherFormData>({
     account_no: "",
@@ -48,6 +50,11 @@ const ChequeVoucherPageContent = () => {
         }
       } catch (error) {
         console.error("Error fetching next cheque number:", error)
+        toast({
+          title: "Warning",
+          description: "Could not fetch cheque number. Using fallback number.",
+          variant: "destructive",
+        })
         // Fallback to a default format if API fails
         setFormData((prev) => ({
           ...prev,
@@ -59,7 +66,46 @@ const ChequeVoucherPageContent = () => {
     }
 
     fetchNextChequeNumber()
-  }, [])
+  }, [toast])
+
+  const validateForm = () => {
+    const errors: string[] = []
+
+    // Check required fields
+    if (!formData.account_no.trim()) {
+      errors.push("Account No. is required")
+    }
+
+    if (!formData.paid_to.trim()) {
+      errors.push("Paid to is required")
+    }
+
+    if (!formData.date) {
+      errors.push("Date is required")
+    }
+
+    if (!formData.pay_to.trim()) {
+      errors.push("Pay To is required")
+    }
+
+    if (!formData.cheque_date) {
+      errors.push("Cheque Date is required")
+    }
+
+    if (!formData.amount || Number.parseFloat(formData.amount) <= 0) {
+      errors.push("Amount must be greater than 0")
+    }
+
+    if (!formData.printed_name.trim()) {
+      errors.push("Printed Name is required")
+    }
+
+    if (!formData.approved_date) {
+      errors.push("Approved Date is required")
+    }
+
+    return errors
+  }
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "___________"
@@ -86,6 +132,17 @@ const ChequeVoucherPageContent = () => {
   }
 
   const exportAsJPEG = async () => {
+    // Validate form before exporting
+    const validationErrors = validateForm()
+    if (validationErrors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: validationErrors.join(", "),
+        variant: "destructive",
+      })
+      return
+    }
+
     if (!previewRef.current) return
 
     setIsExporting(true)
@@ -269,16 +326,36 @@ const ChequeVoucherPageContent = () => {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+
+      toast({
+        title: "Export Successful",
+        description: `Cheque voucher ${formData.cheque_no} has been exported successfully.`,
+      })
     } catch (error) {
       console.error("Error exporting voucher:", error)
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-      alert(`Error exporting voucher: ${errorMessage}. Please try again or check that all fields are filled properly.`)
+      toast({
+        title: "Export Failed",
+        description: `Error exporting voucher: ${errorMessage}. Please try again.`,
+        variant: "destructive",
+      })
     } finally {
       setIsExporting(false)
     }
   }
 
   const saveVoucher = async () => {
+    // Validate form before saving
+    const validationErrors = validateForm()
+    if (validationErrors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: validationErrors.join(", "),
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSaving(true)
     try {
       // Use the pre-fetched cheque number - don't remove it from the data
@@ -290,7 +367,10 @@ const ChequeVoucherPageContent = () => {
 
       const response = await api.createChequeVoucher(dataToSave)
       if (response.success) {
-        alert("Cheque voucher saved successfully!")
+        toast({
+          title: "Success",
+          description: `Cheque voucher ${formData.cheque_no} has been saved successfully!`,
+        })
         // The cheque number should already be correct, but update if backend returns a different one
         if (response.data.cheque_no !== formData.cheque_no) {
           setFormData((prev) => ({
@@ -304,7 +384,11 @@ const ChequeVoucherPageContent = () => {
     } catch (error) {
       console.error("Error saving cheque voucher:", error)
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-      alert(`Error saving cheque voucher: ${errorMessage}. Please try again.`)
+      toast({
+        title: "Save Failed",
+        description: `Error saving cheque voucher: ${errorMessage}. Please try again.`,
+        variant: "destructive",
+      })
     } finally {
       setIsSaving(false)
     }
@@ -344,32 +428,41 @@ const ChequeVoucherPageContent = () => {
               <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="account_no">Account No.</Label>
+                  <Label htmlFor="account_no">
+                    Account No. <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="account_no"
                     value={formData.account_no}
                     onChange={(e) => updateFormData("account_no", e.target.value)}
                     placeholder="Enter account number"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
+                  <Label htmlFor="date">
+                    Date <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="date"
                     type="date"
                     value={formData.date}
                     onChange={(e) => updateFormData("date", e.target.value)}
+                    required
                   />
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="paid_to">Paid to</Label>
+                  <Label htmlFor="paid_to">
+                    Paid to <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="paid_to"
                     value={formData.paid_to}
                     onChange={(e) => updateFormData("paid_to", e.target.value)}
                     placeholder="Enter recipient name"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -389,26 +482,34 @@ const ChequeVoucherPageContent = () => {
               <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Cheque Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="pay_to">Pay To</Label>
+                  <Label htmlFor="pay_to">
+                    Pay To <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="pay_to"
                     value={formData.pay_to}
                     onChange={(e) => updateFormData("pay_to", e.target.value)}
                     placeholder="Enter payee name"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="cheque_date">Cheque Date</Label>
+                  <Label htmlFor="cheque_date">
+                    Cheque Date <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="cheque_date"
                     type="date"
                     value={formData.cheque_date}
                     onChange={(e) => updateFormData("cheque_date", e.target.value)}
+                    required
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount</Label>
+                <Label htmlFor="amount">
+                  Amount <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="amount"
                   value={formData.amount}
@@ -416,6 +517,8 @@ const ChequeVoucherPageContent = () => {
                   placeholder="500000.00"
                   type="number"
                   step="0.01"
+                  min="0"
+                  required
                 />
               </div>
             </div>
@@ -425,21 +528,27 @@ const ChequeVoucherPageContent = () => {
               <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Approval Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="printed_name">Printed Name</Label>
+                  <Label htmlFor="printed_name">
+                    Printed Name <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="printed_name"
                     value={formData.printed_name}
                     onChange={(e) => updateFormData("printed_name", e.target.value)}
                     placeholder="Enter printed name"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="approved_date">Approved Date</Label>
+                  <Label htmlFor="approved_date">
+                    Approved Date <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="approved_date"
                     type="date"
                     value={formData.approved_date}
                     onChange={(e) => updateFormData("approved_date", e.target.value)}
+                    required
                   />
                 </div>
               </div>

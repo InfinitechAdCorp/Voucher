@@ -33,7 +33,6 @@ class ApiClient {
       Accept: "application/json",
     }
 
-    // Add existing headers from options
     if (options.headers) {
       if (options.headers instanceof Headers) {
         options.headers.forEach((value, key) => {
@@ -59,12 +58,12 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config)
-      const data = await response.json()
-
+      
       if (!response.ok) {
-        throw new Error(data.message || "API request failed")
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
+      const data = await response.json()
       return data
     } catch (error) {
       console.error("API Error:", error)
@@ -131,6 +130,22 @@ class ApiClient {
     })
   }
 
+  async updateAccount(id: number, accountName: string, accountNumber: string) {
+    return this.request(`/accounts/${id}`, {
+      method: "PUT",
+      body: JSON.stringify({
+        account_name: accountName,
+        account_number: accountNumber,
+      }),
+    })
+  }
+
+  async deleteAccount(id: number) {
+    return this.request(`/accounts/${id}`, {
+      method: "DELETE",
+    })
+  }
+
   // Cash Voucher methods
   async createCashVoucher(voucherData: any) {
     return this.request("/cash-vouchers", {
@@ -171,56 +186,18 @@ class ApiClient {
     })
   }
 
-  // Changed method name to be more descriptive - this now cancels instead of deletes
   async cancelCashVoucher(id: string) {
     return this.request(`/cash-vouchers/${id}`, {
-      method: "DELETE", // Still uses DELETE method but cancels instead
+      method: "DELETE",
     })
   }
 
-  // Alternative method using the dedicated cancel endpoint
-  async cancelCashVoucherAlt(id: string) {
-    return this.request(`/cash-vouchers/${id}/cancel`, {
-      method: "POST",
-    })
-  }
-
-  // Keep the old method name for backward compatibility
   async deleteCashVoucher(id: string) {
     return this.cancelCashVoucher(id)
   }
 
-  async approveCashVoucher(
-    id: string,
-    approvalData: {
-      approved_name: string
-      approved_date?: string
-      approved_signature?: string
-    },
-  ) {
-    return this.request(`/cash-vouchers/${id}/approve`, {
-      method: "POST",
-      body: JSON.stringify(approvalData),
-    })
-  }
-
-  async markCashVoucherAsPaid(id: string) {
-    return this.request(`/cash-vouchers/${id}/mark-as-paid`, {
-      method: "POST",
-    })
-  }
-
   async getNextCashVoucherNumber() {
     return this.request("/cash-vouchers/next-number")
-  }
-
-  // Legacy Voucher methods (for backward compatibility)
-  async createVoucher(voucherData: any) {
-    return this.createCashVoucher(voucherData)
-  }
-
-  async getVouchers() {
-    return this.getCashVouchers()
   }
 
   // Cheque Voucher methods
@@ -231,8 +208,25 @@ class ApiClient {
     })
   }
 
-  async getChequeVouchers() {
-    return this.request("/cheque-vouchers")
+  async getChequeVouchers(params?: {
+    status?: string
+    start_date?: string
+    end_date?: string
+    search?: string
+    page?: number
+    per_page?: number
+  }) {
+    const queryParams = new URLSearchParams()
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, value.toString())
+        }
+      })
+    }
+
+    const endpoint = `/cheque-vouchers${queryParams.toString() ? `?${queryParams.toString()}` : ""}`
+    return this.request(endpoint)
   }
 
   async getChequeVoucher(id: string) {
@@ -252,14 +246,75 @@ class ApiClient {
     })
   }
 
-  async generateChequeNumber() {
-    return this.request("/cheque-vouchers/generate-number", {
-      method: "POST",
-    })
-  }
-
   async getNextChequeVoucherNumber() {
     return this.request("/cheque-vouchers/next-number")
+  }
+
+  // Dashboard Statistics - New methods for getting totals
+  async getDashboardStats() {
+    try {
+      // Get all cash vouchers
+      const cashResponse = await this.getCashVouchers()
+      // Get all cheque vouchers  
+      const chequeResponse = await this.getChequeVouchers()
+
+      console.log("Cash Response:", cashResponse)
+      console.log("Cheque Response:", chequeResponse)
+
+      // Handle different response structures from Laravel
+      let cashVouchers = []
+      let chequeVouchers = []
+
+      // Handle cash vouchers response
+      if (cashResponse) {
+        if (cashResponse.data) {
+          cashVouchers = Array.isArray(cashResponse.data) ? cashResponse.data : 
+                        (cashResponse.data.data ? cashResponse.data.data : [])
+        } else if (Array.isArray(cashResponse)) {
+          cashVouchers = cashResponse
+        }
+      }
+
+      // Handle cheque vouchers response
+      if (chequeResponse) {
+        if (chequeResponse.data) {
+          chequeVouchers = Array.isArray(chequeResponse.data) ? chequeResponse.data : 
+                          (chequeResponse.data.data ? chequeResponse.data.data : [])
+        } else if (Array.isArray(chequeResponse)) {
+          chequeVouchers = chequeResponse
+        }
+      }
+
+      console.log("Processed Cash Vouchers:", cashVouchers)
+      console.log("Processed Cheque Vouchers:", chequeVouchers)
+
+      // Calculate totals from amount field
+      const totalCashAmount = cashVouchers.reduce((sum: number, voucher: any) => {
+        const amount = parseFloat(voucher.amount) || 0
+        return sum + amount
+      }, 0)
+
+      const totalChequeAmount = chequeVouchers.reduce((sum: number, voucher: any) => {
+        const amount = parseFloat(voucher.amount) || 0
+        return sum + amount
+      }, 0)
+
+      return {
+        success: true,
+        data: {
+          totalCashVouchers: cashVouchers.length,
+          totalChequeVouchers: chequeVouchers.length,
+          totalCashAmount: totalCashAmount,
+          totalChequeAmount: totalChequeAmount,
+          totalAmount: totalCashAmount + totalChequeAmount,
+          cashVouchers: cashVouchers.slice(0, 5), // Recent 5
+          chequeVouchers: chequeVouchers.slice(0, 5), // Recent 5
+        }
+      }
+    } catch (error) {
+      console.error("Error getting dashboard stats:", error)
+      throw error
+    }
   }
 }
 

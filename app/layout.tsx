@@ -1,15 +1,24 @@
-import type React from "react";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import InstallPrompt from "@/components/install-prompt"; // ⬅️ new client component
 
 const inter = Inter({ subsets: ["latin"] });
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+};
 
 export const metadata: Metadata = {
   title: "ABIC Realty Accounting System",
   description: "Professional accounting management system",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/accounting_logo.webp",
+    apple: "/accounting_logo.webp",
+  },
 };
 
 export default function RootLayout({
@@ -28,6 +37,7 @@ export default function RootLayout({
         >
           {children}
           <Toaster />
+          <InstallPrompt /> {/* 👈 Floating button injected here */}
         </ThemeProvider>
       </body>
     </html>

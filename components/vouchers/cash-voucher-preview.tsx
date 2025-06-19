@@ -1,43 +1,38 @@
-"use client";
+"use client"
 
-import type { VoucherFormData } from "@/types";
+import type { VoucherFormData } from "@/types"
 
 interface CashVoucherPreviewProps {
-  formData: VoucherFormData;
+  formData: VoucherFormData
 }
 
-export default function CashVoucherPreview({
-  formData,
-}: CashVoucherPreviewProps) {
+export default function CashVoucherPreview({ formData }: CashVoucherPreviewProps) {
   const formatAmount = (amount: string) => {
-    const num = Number.parseFloat(amount || "0");
-    const formatted = num.toLocaleString("en-US", { minimumFractionDigits: 2 });
-    const parts = formatted.split(".");
-    return { main: parts[0], cents: parts[1] || "00" };
-  };
+    const num = Number.parseFloat(amount || "0")
+    const formatted = num.toLocaleString("en-US", { minimumFractionDigits: 2 })
+    const parts = formatted.split(".")
+    return { main: parts[0], cents: parts[1] || "00" }
+  }
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return "___________";
-    const date = new Date(dateString);
+    if (!dateString) return "___________"
+    const date = new Date(dateString)
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
       day: "numeric",
       year: "numeric",
-    }).format(date);
-  };
+    }).format(date)
+  }
 
   const calculateTotal = () => {
     if (formData.particulars_items && formData.particulars_items.length > 0) {
-      return formData.particulars_items.reduce(
-        (sum, item) => sum + Number.parseFloat(item.amount || "0"),
-        0
-      );
+      return formData.particulars_items.reduce((sum, item) => sum + Number.parseFloat(item.amount || "0"), 0)
     }
-    return Number.parseFloat(formData.amount || "0");
-  };
+    return Number.parseFloat(formData.amount || "0")
+  }
 
-  const totalAmount = calculateTotal();
-  const totalParts = formatAmount(totalAmount.toString());
+  const totalAmount = calculateTotal()
+  const totalParts = formatAmount(totalAmount.toString())
 
   return (
     <div
@@ -72,8 +67,8 @@ export default function CashVoucherPreview({
               }}
               crossOrigin="anonymous"
               onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = "none";
+                const target = e.target as HTMLImageElement
+                target.style.display = "none"
               }}
             />
           </div>
@@ -155,7 +150,7 @@ export default function CashVoucherPreview({
                 display: "inline-block",
               }}
             >
-              {formData.voucher_number || "443-25-0001"}
+              {formData.voucher_number || "CV-XXXXXX"}
             </span>
           </div>
         </div>
@@ -222,7 +217,7 @@ export default function CashVoucherPreview({
         </div>
       </div>
 
-      {/* Particulars Table */}
+      {/* Particulars Table - FIXED WITH PROPER VERTICAL LINES */}
       <div
         className="border border-black mb-4"
         style={{
@@ -230,17 +225,16 @@ export default function CashVoucherPreview({
           marginBottom: "16px",
         }}
       >
+        {/* Table Header */}
         <div
-          className="grid grid-cols-3 border-b border-black"
           style={{
-            display: "grid",
-            gridTemplateColumns: "2fr 1fr",
+            display: "flex",
             borderBottom: "1px solid #000000",
           }}
         >
           <div
-            className="p-2 text-center souvenir-font"
             style={{
+              flex: "2.23",
               fontFamily: "'Times New Roman', serif",
               fontWeight: "300",
               letterSpacing: "3px",
@@ -248,20 +242,28 @@ export default function CashVoucherPreview({
               color: "#000000",
               padding: "8px",
               textAlign: "center",
+              borderRight: "1px solid #000000", // ADDED VERTICAL LINE
+              minHeight: "40px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             PARTICULARS
           </div>
-
           <div
-            className="p-2 text-center souvenir-font"
             style={{
+              flex: "1",
               fontFamily: "'Times New Roman', serif",
               fontWeight: "300",
               fontSize: "14px",
               color: "#000000",
               padding: "8px",
               textAlign: "center",
+              minHeight: "40px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             Amount
@@ -271,25 +273,24 @@ export default function CashVoucherPreview({
         {/* Particulars Items */}
         {formData.particulars_items && formData.particulars_items.length > 0 ? (
           formData.particulars_items.map((item, index) => {
-            const itemAmount = formatAmount(item.amount || "0");
+            const itemAmount = formatAmount(item.amount || "0")
             return (
               <div
                 key={index}
-                className="grid grid-cols-3 border-black"
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "2fr 1fr",
-                  minHeight: "25px",
+                  display: "flex",
+                  minHeight: "30px",
+                  borderBottom: index < formData.particulars_items!.length - 1 ? "1px solid #000000" : "none",
                 }}
               >
                 <div
-                  className="p-2 border-r border-black arial-narrow-font"
                   style={{
+                    flex: "2",
                     fontFamily: "'Arial Narrow', Arial, sans-serif",
                     fontSize: "12px",
                     color: "#000000",
                     padding: "8px",
-                    borderRight: "1px solid #000000",
+                    borderRight: "1px solid #000000", // ADDED VERTICAL LINE
                     display: "flex",
                     alignItems: "center",
                   }}
@@ -297,77 +298,60 @@ export default function CashVoucherPreview({
                   {item.description}
                 </div>
                 <div
-                  className="relative"
                   style={{
-                    position: "relative",
+                    flex: "1",
+                    display: "flex",
                   }}
                 >
                   <div
-                    className="absolute inset-0 grid grid-cols-2"
                     style={{
-                      position: "absolute",
-                      top: "0",
-                      left: "0",
-                      right: "0",
-                      bottom: "0",
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
+                      flex: "1",
+                      fontFamily: "'Arial Narrow', Arial, sans-serif",
+                      fontSize: "12px",
+                      color: "#000000",
+                      padding: "8px",
+                      textAlign: "right",
+                      borderRight: "1px solid #000000", // ADDED VERTICAL LINE
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "flex-end",
                     }}
                   >
-                    <div
-                      className="p-2 text-right border-r border-black arial-narrow-font"
-                      style={{
-                        fontFamily: "'Arial Narrow', Arial, sans-serif",
-                        fontSize: "12px",
-                        color: "#000000",
-                        padding: "8px",
-                        textAlign: "right",
-                        borderRight: "1px solid #000000",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "flex-end",
-                      }}
-                    >
-                      {item.amount ? `₱${itemAmount.main}` : ""}
-                    </div>
-                    <div
-                      className="p-2 text-left arial-narrow-font"
-                      style={{
-                        fontFamily: "'Arial Narrow', Arial, sans-serif",
-                        fontSize: "12px",
-                        color: "#000000",
-                        padding: "8px",
-                        textAlign: "left",
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      {item.amount ? `.${itemAmount.cents}` : ""}
-                    </div>
+                    {item.amount ? `₱${itemAmount.main}` : ""}
+                  </div>
+                  <div
+                    style={{
+                      flex: "1",
+                      fontFamily: "'Arial Narrow', Arial, sans-serif",
+                      fontSize: "12px",
+                      color: "#000000",
+                      padding: "8px",
+                      textAlign: "left",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    {item.amount ? `.${itemAmount.cents}` : ""}
                   </div>
                 </div>
               </div>
-            );
+            )
           })
         ) : (
           <div
-            className="grid grid-cols-3 relative"
             style={{
-              display: "grid",
-              gridTemplateColumns: "2fr 1fr",
-              position: "relative",
-              minHeight: "50px",
+              display: "flex",
+              minHeight: "80px",
             }}
           >
             <div
-              className="p-2 border-r border-black"
               style={{
+                flex: "2",
                 padding: "8px",
-                borderRight: "1px solid #000000",
+                borderRight: "1px solid #000000", // ADDED VERTICAL LINE
               }}
             >
               <div
-                className="w-full leading-relaxed whitespace-pre-wrap arial-narrow-font"
                 style={{
                   fontFamily: "'Arial Narrow', Arial, sans-serif",
                   fontSize: "12px",
@@ -375,63 +359,46 @@ export default function CashVoucherPreview({
                   width: "100%",
                   lineHeight: "1.5",
                   whiteSpace: "pre-wrap",
-                  minHeight: "35px",
+                  minHeight: "60px",
                 }}
               >
                 {formData.particulars || ""}
               </div>
             </div>
             <div
-              className="relative"
               style={{
-                position: "relative",
+                flex: "1",
+                display: "flex",
               }}
             >
               <div
-                className="absolute inset-0 grid grid-cols-2"
                 style={{
-                  position: "absolute",
-                  top: "0",
-                  left: "0",
-                  right: "0",
-                  bottom: "0",
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
+                  flex: "1",
+                  fontFamily: "'Arial Narrow', Arial, sans-serif",
+                  fontSize: "12px",
+                  color: "#000000",
+                  padding: "8px",
+                  textAlign: "right",
+                  borderRight: "1px solid #000000", // ADDED VERTICAL LINE
+                  display: "flex",
+                  alignItems: "flex-start",
                 }}
               >
-                <div
-                  className="p-2 text-right border-r border-black arial-narrow-font"
-                  style={{
-                    fontFamily: "'Arial Narrow', Arial, sans-serif",
-                    fontSize: "12px",
-                    color: "#000000",
-                    padding: "8px",
-                    textAlign: "right",
-                    borderRight: "1px solid #000000",
-                    display: "flex",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  {formData.amount
-                    ? `₱${formatAmount(formData.amount).main}`
-                    : ""}
-                </div>
-                <div
-                  className="p-2 text-left arial-narrow-font"
-                  style={{
-                    fontFamily: "'Arial Narrow', Arial, sans-serif",
-                    fontSize: "12px",
-                    color: "#000000",
-                    padding: "8px",
-                    textAlign: "left",
-                    display: "flex",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  {formData.amount
-                    ? `.${formatAmount(formData.amount).cents}`
-                    : ""}
-                </div>
+                {formData.amount ? `₱${formatAmount(formData.amount).main}` : ""}
+              </div>
+              <div
+                style={{
+                  flex: "1",
+                  fontFamily: "'Arial Narrow', Arial, sans-serif",
+                  fontSize: "12px",
+                  color: "#000000",
+                  padding: "8px",
+                  textAlign: "left",
+                  display: "flex",
+                  alignItems: "flex-start",
+                }}
+              >
+                {formData.amount ? `.${formatAmount(formData.amount).cents}` : ""}
               </div>
             </div>
           </div>
@@ -439,69 +406,55 @@ export default function CashVoucherPreview({
 
         {/* Total Row */}
         <div
-          className="grid grid-cols-3"
           style={{
-            display: "grid",
-            gridTemplateColumns: "2fr 1fr",
+            display: "flex",
+  
           }}
         >
           <div
-            className="p-2 text-right border-r border-black souvenir-font"
             style={{
+              flex: "2",
               fontFamily: "'Times New Roman', serif",
               fontWeight: "300",
               fontSize: "14px",
               color: "#000000",
               padding: "8px",
               textAlign: "right",
-              borderRight: "1px solid #000000",
+              borderRight: "1px solid #000000", // ADDED VERTICAL LINE
             }}
           >
             TOTAL ₱
           </div>
           <div
-            className="relative"
             style={{
-              position: "relative",
+              flex: "1",
+              display: "flex",
             }}
           >
             <div
-              className="absolute inset-0 grid grid-cols-2"
               style={{
-                position: "absolute",
-                top: "0",
-                left: "0",
-                right: "0",
-                bottom: "0",
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
+                flex: "1",
+                fontFamily: "'Arial Narrow', Arial, sans-serif",
+                fontSize: "14px",
+                color: "#000000",
+                padding: "8px",
+                textAlign: "right",
+                borderRight: "1px solid #000000", // ADDED VERTICAL LINE
               }}
             >
-              <div
-                className="p-2 text-right border-r border-black arial-narrow-font"
-                style={{
-                  fontFamily: "'Arial Narrow', Arial, sans-serif",
-                  fontSize: "14px",
-                  color: "#000000",
-                  padding: "8px",
-                  textAlign: "right",
-                  borderRight: "1px solid #000000",
-                }}
-              >
-                {totalParts.main}
-              </div>
-              <div
-                className="p-2 text-left arial-narrow-font"
-                style={{
-                  fontFamily: "'Arial Narrow', Arial, sans-serif",
-                  fontSize: "14px",
-                  color: "#000000",
-                  padding: "8px",
-                  textAlign: "left",
-                }}
-              >
-                .{totalParts.cents}
-              </div>
+              {totalParts.main}
+            </div>
+            <div
+              style={{
+                flex: "1",
+                fontFamily: "'Arial Narrow', Arial, sans-serif",
+                fontSize: "14px",
+                color: "#000000",
+                padding: "8px",
+                textAlign: "left",
+              }}
+            >
+              .{totalParts.cents}
             </div>
           </div>
         </div>
@@ -554,8 +507,8 @@ export default function CashVoucherPreview({
                     }}
                     crossOrigin="anonymous"
                     onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = "none";
+                      const target = e.target as HTMLImageElement
+                      target.style.display = "none"
                     }}
                   />
                 ) : (
@@ -567,7 +520,7 @@ export default function CashVoucherPreview({
                       color: "#666666",
                     }}
                   >
-                    Signature
+                    Signature will appear here
                   </span>
                 )}
               </div>
@@ -610,7 +563,7 @@ export default function CashVoucherPreview({
                   textAlign: "center",
                 }}
               >
-                Signature Over Printed Name
+                PRINTED NAME
               </div>
             </div>
           </div>
@@ -642,7 +595,7 @@ export default function CashVoucherPreview({
                   width: "80px",
                 }}
               >
-                Signature:
+                SIGNATURE:
               </span>
               <div
                 className="flex-1 border-b border-black px-2"
@@ -669,8 +622,8 @@ export default function CashVoucherPreview({
                     }}
                     crossOrigin="anonymous"
                     onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = "none";
+                      const target = e.target as HTMLImageElement
+                      target.style.display = "none"
                     }}
                   />
                 ) : (
@@ -682,7 +635,7 @@ export default function CashVoucherPreview({
                       color: "#666666",
                     }}
                   >
-                    Signature
+                    Signature will appear here
                   </span>
                 )}
               </div>
@@ -699,7 +652,7 @@ export default function CashVoucherPreview({
                   width: "80px",
                 }}
               >
-                Printed name:
+                Printed Name:
               </span>
               <div
                 className="flex-1 border-b border-black px-2"
@@ -767,5 +720,5 @@ export default function CashVoucherPreview({
         </div>
       </div>
     </div>
-  );
+  )
 }

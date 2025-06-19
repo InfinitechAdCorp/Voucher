@@ -1,0 +1,21 @@
+{
+  "name": "ABIC Realty Accounting System",
+  "short_name": "ABIC Accounting",
+  "description": "Professional accounting management system",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/accounting_logo.webp",
+      "sizes": "192x192",
+      "type": "image/png/webp"
+    },
+    {
+      "src": "/accounting_logo.webp",
+      "sizes": "512x512",
+      "type": "image/png/webp"
+    }
+  ]
+}

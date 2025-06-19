@@ -7,11 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Download, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, Download, Plus, Trash2 } from 'lucide-react'
 import Link from "next/link"
 import CashVoucherPreview from "@/components/vouchers/cash-voucher-preview"
 import html2canvas from "html2canvas"
 import api from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 import type { VoucherFormData, ParticularItem } from "@/types"
 
 const CashVoucherPageContent = () => {
@@ -21,6 +22,7 @@ const CashVoucherPageContent = () => {
   const [isExporting, setIsExporting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isLoadingNumber, setIsLoadingNumber] = useState(true)
+  const { toast } = useToast()
 
   const [formData, setFormData] = useState<VoucherFormData>({
     amount: "",
@@ -50,6 +52,11 @@ const CashVoucherPageContent = () => {
         }
       } catch (error) {
         console.error("Error fetching next voucher number:", error)
+        toast({
+          title: "Warning",
+          description: "Could not fetch voucher number. Using fallback number.",
+          variant: "destructive",
+        })
         // Fallback to a default format if API fails
         setFormData((prev) => ({
           ...prev,
@@ -61,7 +68,54 @@ const CashVoucherPageContent = () => {
     }
 
     fetchNextVoucherNumber()
-  }, [])
+  }, [toast])
+
+  const validateForm = () => {
+    const errors: string[] = []
+
+    // Check required fields
+    if (!formData.paid_to.trim()) {
+      errors.push("Paid to is required")
+    }
+
+    if (!formData.date) {
+      errors.push("Date is required")
+    }
+
+    // Check if we have either particulars text or particular items
+    const hasParticularsText = formData.particulars && formData.particulars.trim()
+    const hasParticularItems = formData.particulars_items && formData.particulars_items.length > 0
+
+    if (!hasParticularsText && !hasParticularItems) {
+      errors.push("Particulars are required (either text or items)")
+    }
+
+    // Check amount - either main amount or particular items should have amounts
+    if (hasParticularItems) {
+      const hasValidItems = formData.particulars_items?.some(
+        (item) => item.description.trim() && item.amount && Number.parseFloat(item.amount) > 0
+      )
+      if (!hasValidItems) {
+        errors.push("At least one particular item must have a description and amount")
+      }
+    } else if (!formData.amount || Number.parseFloat(formData.amount) <= 0) {
+      errors.push("Amount must be greater than 0")
+    }
+
+    if (!formData.printed_name.trim()) {
+      errors.push("Received by (Printed Name) is required")
+    }
+
+    if (!formData.approved_name.trim()) {
+      errors.push("Approved by (Printed Name) is required")
+    }
+
+    if (!formData.approved_date) {
+      errors.push("Approved date is required")
+    }
+
+    return errors
+  }
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "___________"
@@ -117,6 +171,17 @@ const CashVoucherPageContent = () => {
   }
 
   const exportAsJPEG = async () => {
+    // Validate form before exporting
+    const validationErrors = validateForm()
+    if (validationErrors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: validationErrors.join(", "),
+        variant: "destructive",
+      })
+      return
+    }
+
     if (!previewRef.current) return
 
     setIsExporting(true)
@@ -387,16 +452,36 @@ const CashVoucherPageContent = () => {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+
+      toast({
+        title: "Export Successful",
+        description: `Cash voucher ${formData.voucher_number} has been exported successfully.`,
+      })
     } catch (error) {
       console.error("Error exporting voucher:", error)
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-      alert(`Error exporting voucher: ${errorMessage}. Please try again or check that all fields are filled properly.`)
+      toast({
+        title: "Export Failed",
+        description: `Error exporting voucher: ${errorMessage}. Please try again.`,
+        variant: "destructive",
+      })
     } finally {
       setIsExporting(false)
     }
   }
 
   const saveVoucher = async () => {
+    // Validate form before saving
+    const validationErrors = validateForm()
+    if (validationErrors.length > 0) {
+      toast({
+        title: "Validation Error",
+        description: validationErrors.join(", "),
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSaving(true)
     try {
       // Use the pre-fetched voucher number - don't remove it from the data
@@ -411,7 +496,10 @@ const CashVoucherPageContent = () => {
       const response = await api.createCashVoucher(dataToSave)
 
       if (response.success) {
-        alert("Voucher saved successfully!")
+        toast({
+          title: "Success",
+          description: `Cash voucher ${formData.voucher_number} has been saved successfully!`,
+        })
         // The voucher number should already be correct, but update if backend returns a different one
         if (response.data.voucher_number !== formData.voucher_number) {
           setFormData((prev) => ({
@@ -425,7 +513,11 @@ const CashVoucherPageContent = () => {
     } catch (error) {
       console.error("Error saving voucher:", error)
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
-      alert(`Error saving voucher: ${errorMessage}. Please try again.`)
+      toast({
+        title: "Save Failed",
+        description: `Error saving voucher: ${errorMessage}. Please try again.`,
+        variant: "destructive",
+      })
     } finally {
       setIsSaving(false)
     }
@@ -474,22 +566,28 @@ const CashVoucherPageContent = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
+                  <Label htmlFor="date">
+                    Date <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="date"
                     type="date"
                     value={formData.date}
                     onChange={(e) => updateFormData("date", e.target.value)}
+                    required
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="paid_to">Paid to</Label>
+                <Label htmlFor="paid_to">
+                  Paid to <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="paid_to"
                   value={formData.paid_to}
                   onChange={(e) => updateFormData("paid_to", e.target.value)}
                   placeholder="Enter recipient name"
+                  required
                 />
               </div>
             </div>
@@ -497,7 +595,9 @@ const CashVoucherPageContent = () => {
             {/* Particulars Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b pb-2">
-                <h3 className="text-lg font-medium text-gray-900">Particulars</h3>
+                <h3 className="text-lg font-medium text-gray-900">
+                  Particulars <span className="text-red-500">*</span>
+                </h3>
                 <Button type="button" onClick={addParticularItem} size="sm" variant="outline">
                   <Plus className="h-4 w-4 mr-1" />
                   Add Item
@@ -509,21 +609,28 @@ const CashVoucherPageContent = () => {
                   {formData.particulars_items.map((item, index) => (
                     <div key={index} className="grid grid-cols-12 gap-2 items-end p-3 bg-gray-50 rounded-lg">
                       <div className="col-span-7">
-                        <Label className="text-sm">Description</Label>
+                        <Label className="text-sm">
+                          Description <span className="text-red-500">*</span>
+                        </Label>
                         <Input
                           placeholder="Enter description"
                           value={item.description}
                           onChange={(e) => updateParticularItem(index, "description", e.target.value)}
+                          required
                         />
                       </div>
                       <div className="col-span-4">
-                        <Label className="text-sm">Amount</Label>
+                        <Label className="text-sm">
+                          Amount <span className="text-red-500">*</span>
+                        </Label>
                         <Input
                           placeholder="0.00"
                           type="number"
                           step="0.01"
+                          min="0"
                           value={item.amount}
                           onChange={(e) => updateParticularItem(index, "amount", e.target.value)}
+                          required
                         />
                       </div>
                       <div className="col-span-1">
@@ -542,17 +649,22 @@ const CashVoucherPageContent = () => {
               ) : (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="particulars">Particulars (Text)</Label>
+                    <Label htmlFor="particulars">
+                      Particulars (Text) <span className="text-red-500">*</span>
+                    </Label>
                     <Textarea
                       id="particulars"
                       value={formData.particulars}
                       onChange={(e) => updateFormData("particulars", e.target.value)}
                       placeholder="Enter particulars or use Add Item button above"
                       rows={4}
+                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="amount">Amount</Label>
+                    <Label htmlFor="amount">
+                      Amount <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id="amount"
                       value={formData.amount}
@@ -560,6 +672,8 @@ const CashVoucherPageContent = () => {
                       placeholder="500000.00"
                       type="number"
                       step="0.01"
+                      min="0"
+                      required
                     />
                   </div>
                 </div>
@@ -571,12 +685,15 @@ const CashVoucherPageContent = () => {
               <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Signatures</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="printed_name">Received By (Printed Name)</Label>
+                  <Label htmlFor="printed_name">
+                    Received By (Printed Name) <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="printed_name"
                     value={formData.printed_name}
                     onChange={(e) => updateFormData("printed_name", e.target.value)}
                     placeholder="Enter printed name"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -605,21 +722,27 @@ const CashVoucherPageContent = () => {
               <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Approval Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="approved_name">Approved By (Printed Name)</Label>
+                  <Label htmlFor="approved_name">
+                    Approved By (Printed Name) <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="approved_name"
                     value={formData.approved_name}
                     onChange={(e) => updateFormData("approved_name", e.target.value)}
                     placeholder="Enter printed name"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="approved_date">Approved Date</Label>
+                  <Label htmlFor="approved_date">
+                    Approved Date <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="approved_date"
                     type="date"
                     value={formData.approved_date}
                     onChange={(e) => updateFormData("approved_date", e.target.value)}
+                    required
                   />
                 </div>
               </div>
