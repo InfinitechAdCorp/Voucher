@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-     "dev": "next dev",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint --fix"
@@ -41,6 +41,7 @@
     "next": "15.3.1",
     "next-pwa": "^5.6.0",
     "next-themes": "0.4.6",
+    "pwa": "^1.9.7",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },

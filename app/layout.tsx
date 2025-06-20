@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   description: "Professional accounting management system",
   manifest: "/manifest.json",
   icons: {
-    icon: "/accounting_logo.webp",
-    apple: "/accounting_logo.webp",
+    icon: "/icon512_maskable.png",
+    apple: "/icon512_rounded.png",
   },
 };
 
