@@ -48,19 +48,31 @@ export function EditAccountDialog({ account, open, onOpenChange, onAccountUpdate
     e.preventDefault()
     if (!account) return
 
+    if (!accountName.trim() || !accountNumber.trim()) {
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsLoading(true)
     try {
-      await api.updateAccount(account.id, accountName, accountNumber)
+      await api.updateAccount(account.id, accountName.trim(), accountNumber.trim())
+
       toast({
-        title: "Account updated successfully",
-        description: `Account ${accountName} has been updated`,
+        title: "Success",
+        description: "Account updated successfully",
       })
+
       onAccountUpdated()
       onOpenChange(false)
-    } catch (error: any) {
+    } catch (error) {
+      console.error("Error updating account:", error)
       toast({
-        title: "Failed to update account",
-        description: error.message || "Something went wrong",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update account",
         variant: "destructive",
       })
     } finally {
@@ -68,42 +80,50 @@ export function EditAccountDialog({ account, open, onOpenChange, onAccountUpdate
     }
   }
 
+  const handleClose = () => {
+    setAccountName("")
+    setAccountNumber("")
+    onOpenChange(false)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Account</DialogTitle>
-          <DialogDescription>Make changes to your account details here.</DialogDescription>
+          <DialogDescription>Update the account information below.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="account_name" className="text-right">
-                Account Name
+              <Label htmlFor="account-name" className="text-right">
+                Name
               </Label>
               <Input
-                id="account_name"
+                id="account-name"
                 value={accountName}
                 onChange={(e) => setAccountName(e.target.value)}
                 className="col-span-3"
-                required
+                placeholder="Enter account name"
+                disabled={isLoading}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="account_number" className="text-right">
-                Account Number
+              <Label htmlFor="account-number" className="text-right">
+                Number
               </Label>
               <Input
-                id="account_number"
+                id="account-number"
                 value={accountNumber}
                 onChange={(e) => setAccountNumber(e.target.value)}
                 className="col-span-3"
-                required
+                placeholder="Enter account number"
+                disabled={isLoading}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>

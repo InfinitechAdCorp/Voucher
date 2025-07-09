@@ -41,9 +41,11 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
         padding: "16px",
         width: "100%",
         maxWidth: "800px",
+        minWidth: "320px", // Add minimum width for the entire container
         margin: "0 auto",
       }}
     >
+      {/* RESPONSIVE CONTAINER - Adapts to mobile and desktop views */}
       {/* Logo and Title Container */}
       <div className="flex justify-start items-start mb-4">
         <div className="flex items-center space-x-3">
@@ -152,12 +154,14 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
         </div>
       </div>
 
-      {/* Cheque Details Table - FIXED WITH PROPER VERTICAL LINES */}
+      {/* MOBILE & DESKTOP RESPONSIVE TABLE - Uses flexbox with minimum widths for mobile compatibility */}
+      {/* Cheque Details Table - MOBILE RESPONSIVE WITH PROPER VERTICAL LINES */}
       <div
         className="border border-black mb-4"
         style={{
           border: "1px solid #000000",
           marginBottom: "16px",
+          overflow: "hidden",
         }}
       >
         {/* Table Header */}
@@ -165,8 +169,10 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
           style={{
             display: "flex",
             borderBottom: "1px solid #000000",
+            minHeight: "50px",
           }}
         >
+          {/* DESKTOP: Full width columns, MOBILE: Minimum widths prevent collapse */}
           <div
             style={{
               flex: "3",
@@ -180,9 +186,8 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              minHeight: "50px",
-              lineHeight: "1",
-              borderRight: "1px solid #000000", // ADDED VERTICAL LINE
+              borderRight: "1px solid #000000",
+              minWidth: "200px", // Ensure minimum width
             }}
           >
             CHEQUE DETAILS
@@ -190,29 +195,36 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
 
           <div
             style={{
-              flex: "1",
+            
               display: "flex",
               fontFamily: "'Times New Roman', serif",
               fontWeight: "300",
               fontSize: "14px",
               color: "#000000",
               minHeight: "50px",
+              minWidth: "115px",
             }}
           >
             <div
               style={{
-                flex: "3",
                 padding: "8px",
                 textAlign: "center",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                borderRight: "1px solid #000000",
               }}
             >
               Amount
             </div>
-            
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {/* Empty space for cents column header */}
+            </div>
           </div>
         </div>
 
@@ -228,7 +240,8 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
             style={{
               flex: "3",
               padding: "8px",
-              borderRight: "1px solid #000000", // ADDED VERTICAL LINE
+              borderRight: "1px solid #000000",
+              minWidth: "200px", // Ensure minimum width
             }}
           >
             <div
@@ -251,17 +264,16 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
               <div className="mb-2">
                 <strong>Date:</strong> {formatDate(formData.cheque_date)}
               </div>
-             <div className="mb-2">
-  <strong>Amount:</strong>{" "}
-  {formData.amount ? (
-    <span className="inline-flex items-center">
-      {formatAmount(formData.amount).main}.{formatAmount(formData.amount).cents}
-    </span>
-  ) : (
-    ""
-  )}
-</div>
-
+              <div className="mb-2">
+                <strong>Amount:</strong>{" "}
+                {formData.amount ? (
+                  <span className="inline-flex items-center">
+                    {formatAmount(formData.amount).main}.{formatAmount(formData.amount).cents}
+                  </span>
+                ) : (
+                  ""
+                )}
+              </div>
             </div>
           </div>
           <div
@@ -271,29 +283,35 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
               fontFamily: "'Arial Narrow', Arial, sans-serif",
               fontSize: "12px",
               color: "#000000",
+              minWidth: "110px", // Increased minimum width for better mobile support
+              width: "110px", // Increased fixed width
             }}
           >
             <div
               style={{
-                flex: "3",
-                padding: "8px",
+                width: "75px", // Increased width for main amount
+                padding: "4px 2px", // Reduced horizontal padding for mobile
                 textAlign: "right",
                 display: "flex",
                 alignItems: "flex-end",
-                justifyContent: "flex-start",
+                justifyContent: "flex-start", // Changed to flex-end for better alignment
                 borderRight: "1px solid #000000",
+                backgroundColor: "#ffffff",
+                fontSize: "11px", // Slightly smaller font for mobile
               }}
             >
               {formData.amount ? `${formatAmount(formData.amount).main}` : ""}
             </div>
             <div
               style={{
-                flex: "1",
-                padding: "8px",
+                width: "35px", // Increased width for cents
+                padding: "4px 2px", // Reduced horizontal padding for mobile
                 textAlign: "left",
                 display: "flex",
                 alignItems: "flex-end",
                 justifyContent: "flex-start",
+                backgroundColor: "#ffffff",
+                fontSize: "11px", // Slightly smaller font for mobile
               }}
             >
               {formData.amount ? `.${formatAmount(formData.amount).cents}` : ""}
@@ -305,7 +323,7 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
         <div
           style={{
             display: "flex",
-           
+            borderTop: "1px solid #000000",
           }}
         >
           <div
@@ -317,7 +335,8 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
               color: "#000000",
               padding: "8px",
               textAlign: "right",
-              borderRight: "1px solid #000000", // ADDED VERTICAL LINE
+              borderRight: "1px solid #000000",
+              minWidth: "200px", // Ensure minimum width
             }}
           >
             TOTAL ₱
@@ -330,37 +349,47 @@ export default function ChequeVoucherPreview({ formData }: ChequeVoucherPreviewP
               fontSize: "14px",
               fontWeight: "bold",
               color: "#000000",
+              minWidth: "110px", // Increased minimum width
+              width: "110px", // Increased fixed width
             }}
           >
             <div
-              style={{
-                flex: "3",
-                padding: "8px",
-                textAlign: "right",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-start",
-                borderRight: "1px solid #000000",
-              }}
-            >
-              {totalParts.main}
-            </div>
-            <div
-              style={{
-                flex: "1",
-                padding: "8px",
-                textAlign: "left",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-start",
-              }}
-            >
-              .{totalParts.cents}
-            </div>
+  style={{
+    width: "75px", // Increased width for main amount
+    padding: "4px 2px", // Reduced horizontal padding for mobile
+    textAlign: "right",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-start", // Changed to flex-end for better alignment
+    borderRight: "1px solid #000000",
+    backgroundColor: "#ffffff", // Ensure background
+    fontSize: "13px", // Slightly smaller font for mobile
+    fontWeight: "normal", // Ensures text is not bold
+  }}
+>
+  {totalParts.main}
+</div>
+<div
+  style={{
+    width: "35px", // Increased width for cents
+    padding: "4px 2px", // Reduced horizontal padding for mobile
+    textAlign: "left",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    backgroundColor: "#ffffff", // Ensure background
+    fontSize: "13px", // Slightly smaller font for mobile
+    fontWeight: "normal", // Ensures text is not bold
+  }}
+>
+  .{totalParts.cents}
+</div>
+
           </div>
         </div>
       </div>
 
+      {/* RESPONSIVE SIGNATURE SECTION - Fixed width for mobile, flexible for desktop */}
       {/* Fixed Approved By Section - No floating lines */}
       <div className="mt-4">
         <div className="w-1/2">

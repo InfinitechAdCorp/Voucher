@@ -43,186 +43,177 @@ export default function CashVoucherPreview({ formData }: CashVoucherPreviewProps
         backgroundColor: "#ffffff",
         color: "#000000",
         minHeight: "400px",
-        fontSize: "14px",
+        fontSize: "12px",
         lineHeight: "1.2",
-        padding: "16px",
+        padding: "20px",
         width: "100%",
         maxWidth: "800px",
         margin: "0 auto",
       }}
     >
-      {/* Logo and Title Container */}
-      <div className="flex justify-start items-start mb-4">
-        <div className="flex items-center space-x-3">
-          <div className="w-24 h-20 flex items-center justify-center">
-            <img
-              src="/abiclogo.png"
-              alt="ABIC Logo"
-              className="w-full h-full object-contain"
-              style={{
-                maxWidth: "100%",
-                maxHeight: "100%",
-                objectFit: "contain",
-                display: "block",
-              }}
-              crossOrigin="anonymous"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.style.display = "none"
-              }}
-            />
-          </div>
+      {/* Logo and Title Row */}
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex items-center">
+          <img
+            src="/abiclogo.png"
+            alt="ABIC Logo"
+            className="w-16 h-16 object-contain mr-4"
+            crossOrigin="anonymous"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement
+              target.style.display = "none"
+            }}
+          />
+        </div>
+        <div className="flex-1 text-center">
+          <h1
+            className="font-normal border-b-2 border-black pb-1 inline-block"
+            style={{
+              fontFamily: "'Times New Roman', serif",
+              fontWeight: "normal",
+              fontSize: "18px",
+              color: "#000000",
+              borderBottom: "2px solid #000000",
+              paddingBottom: "2px",
+              display: "inline-block",
+            }}
+          >
+            CASH VOUCHER
+          </h1>
+        </div>
+        <div className="w-16"></div>
+      </div>
+
+      {/* Amount and Voucher Info Row */}
+      <div className="flex justify-between items-center mb-4">
+        {/* <div className="flex items-baseline">
+          <span
+            className="mr-2"
+            style={{
+              fontFamily: "'Times New Roman', serif",
+              fontWeight: "normal",
+              fontSize: "14px",
+              color: "#000000",
+            }}
+          >
+            Amount:
+          </span>
+          <span
+            className="border-b border-black px-2"
+            style={{
+              fontFamily: "Arial, sans-serif",
+              fontSize: "14px",
+              color: "#000000",
+              borderBottom: "1px solid #000000",
+              paddingLeft: "8px",
+              paddingRight: "8px",
+              minHeight: "20px",
+              width: "200px",
+              display: "inline-block",
+            }}
+          >
+            {totalAmount > 0 ? `₱${totalParts.main}.${totalParts.cents}` : ""}
+          </span>
+        </div> */}
+        <div className="flex items-baseline">
+          <span
+            className="mr-2"
+            style={{
+              fontFamily: "'Times New Roman', serif",
+              fontWeight: "normal",
+              fontSize: "14px",
+              color: "#000000",
+            }}
+          >
+            Voucher No:
+          </span>
+          <span
+            className="border-b border-black px-2"
+            style={{
+              fontFamily: "Arial, sans-serif",
+              fontSize: "14px",
+              color: "#000000",
+              borderBottom: "1px solid #000000",
+              paddingLeft: "8px",
+              paddingRight: "8px",
+              minHeight: "20px",
+              width: "120px",
+              display: "inline-block",
+            }}
+          >
+            {formData.voucher_number || ""}
+          </span>
         </div>
       </div>
 
-      {/* Centered "CASH VOUCHER" Title */}
-      <div className="text-center mb-4">
-        <h1
-          className="font-bold border-b-2 border-black pb-1 inline-block souvenir-font"
-          style={{
-            fontFamily: "'Times New Roman', serif",
-            fontWeight: "300",
-            fontSize: "20px",
-            color: "#000000",
-            borderBottom: "2px solid #000000",
-            paddingBottom: "4px",
-            display: "inline-block",
-          }}
-        >
-          CASH VOUCHER
-        </h1>
-      </div>
-
-      <div className="mb-4">
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex items-baseline">
-            <span
-              className="font-medium mr-2 souvenir-font"
-              style={{
-                fontFamily: "'Times New Roman', serif",
-                fontWeight: "300",
-                fontSize: "14px",
-                color: "#000000",
-              }}
-            >
-              Amount:
-            </span>
-            <span
-              className="border-b border-black px-2 arial-narrow-font"
-              style={{
-                fontFamily: "'Arial Narrow', Arial, sans-serif",
-                fontSize: "14px",
-                color: "#000000",
-                borderBottom: "1px solid #000000",
-                paddingLeft: "8px",
-                paddingRight: "8px",
-                minHeight: "20px",
-                width: "200px",
-                display: "inline-block",
-              }}
-            >
-              {totalAmount > 0 ? `₱${totalParts.main}.${totalParts.cents}` : ""}
-            </span>
-          </div>
-          <div className="flex items-baseline">
-            <span
-              className="font-medium mr-2 souvenir-font"
-              style={{
-                fontFamily: "'Times New Roman', serif",
-                fontWeight: "300",
-                fontSize: "14px",
-                color: "#000000",
-              }}
-            >
-              Voucher No:
-            </span>
-            <span
-              className="border-b border-black px-2 arial-narrow-font"
-              style={{
-                fontFamily: "'Arial Narrow', Arial, sans-serif",
-                fontSize: "14px",
-                color: "#000000",
-                borderBottom: "1px solid #000000",
-                paddingLeft: "8px",
-                paddingRight: "8px",
-                minHeight: "20px",
-                width: "120px",
-                display: "inline-block",
-              }}
-            >
-              {formData.voucher_number || "CV-XXXXXX"}
-            </span>
-          </div>
+      {/* Paid To and Date Row */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-baseline">
+          <span
+            className="mr-2"
+            style={{
+              fontFamily: "'Times New Roman', serif",
+              fontWeight: "normal",
+              fontSize: "14px",
+              color: "#000000",
+            }}
+          >
+            Paid to:
+          </span>
+          <span
+            className="border-b border-black px-2"
+            style={{
+              fontFamily: "Arial, sans-serif",
+              fontSize: "14px",
+              color: "#000000",
+              borderBottom: "1px solid #000000",
+              paddingLeft: "8px",
+              paddingRight: "8px",
+              minHeight: "20px",
+              width: "250px",
+              display: "inline-block",
+            }}
+          >
+            {formData.paid_to}
+          </span>
         </div>
-
-        <div className="flex justify-between items-center">
-          <div className="flex items-baseline">
-            <span
-              className="font-medium mr-2 souvenir-font"
-              style={{
-                fontFamily: "'Times New Roman', serif",
-                fontWeight: "300",
-                fontSize: "14px",
-                color: "#000000",
-              }}
-            >
-              Paid to:
-            </span>
-            <span
-              className="border-b border-black px-2 arial-narrow-font"
-              style={{
-                fontFamily: "'Arial Narrow', Arial, sans-serif",
-                fontSize: "14px",
-                color: "#000000",
-                borderBottom: "1px solid #000000",
-                paddingLeft: "8px",
-                paddingRight: "8px",
-                minHeight: "20px",
-                width: "200px",
-                display: "inline-block",
-              }}
-            >
-              {formData.paid_to}
-            </span>
-          </div>
-          <div className="flex items-baseline">
-            <span
-              className="font-medium mr-2 souvenir-font"
-              style={{
-                fontFamily: "'Times New Roman', serif",
-                fontWeight: "300",
-                fontSize: "14px",
-                color: "#000000",
-              }}
-            >
-              Date:
-            </span>
-            <span
-              className="border-b border-black px-2 arial-narrow-font"
-              style={{
-                fontFamily: "'Arial Narrow', Arial, sans-serif",
-                fontSize: "14px",
-                color: "#000000",
-                borderBottom: "1px solid #000000",
-                paddingLeft: "8px",
-                paddingRight: "8px",
-                minHeight: "20px",
-                width: "120px",
-                display: "inline-block",
-              }}
-            >
-              {formatDate(formData.date)}
-            </span>
-          </div>
+        <div className="flex items-baseline">
+          <span
+            className="mr-2"
+            style={{
+              fontFamily: "'Times New Roman', serif",
+              fontWeight: "normal",
+              fontSize: "14px",
+              color: "#000000",
+            }}
+          >
+            Date:
+          </span>
+          <span
+            className="border-b border-black px-2"
+            style={{
+              fontFamily: "Arial, sans-serif",
+              fontSize: "14px",
+              color: "#000000",
+              borderBottom: "1px solid #000000",
+              paddingLeft: "8px",
+              paddingRight: "8px",
+              minHeight: "20px",
+              width: "120px",
+              display: "inline-block",
+            }}
+          >
+            {formatDate(formData.date)}
+          </span>
         </div>
       </div>
 
-      {/* Particulars Table - FIXED WITH PROPER VERTICAL LINES */}
+      {/* Particulars Table */}
       <div
-        className="border border-black mb-4"
+        className="border-2 border-black mb-6"
         style={{
-          border: "1px solid #000000",
-          marginBottom: "16px",
+          border: "2px solid #000000",
+          marginBottom: "24px",
         }}
       >
         {/* Table Header */}
@@ -234,15 +225,15 @@ export default function CashVoucherPreview({ formData }: CashVoucherPreviewProps
         >
           <div
             style={{
-              flex: "2.23",
+              flex: "3",
               fontFamily: "'Times New Roman', serif",
-              fontWeight: "300",
-              letterSpacing: "3px",
+              fontWeight: "normal",
+              letterSpacing: "2px",
               fontSize: "14px",
               color: "#000000",
-              padding: "8px",
+              padding: "12px",
               textAlign: "center",
-              borderRight: "1px solid #000000", // ADDED VERTICAL LINE
+              borderRight: "1px solid #000000",
               minHeight: "40px",
               display: "flex",
               alignItems: "center",
@@ -255,466 +246,417 @@ export default function CashVoucherPreview({ formData }: CashVoucherPreviewProps
             style={{
               flex: "1",
               fontFamily: "'Times New Roman', serif",
-              fontWeight: "300",
+              fontWeight: "normal",
               fontSize: "14px",
               color: "#000000",
-              padding: "8px",
+              padding: "12px",
               textAlign: "center",
               minHeight: "40px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              position: "relative",
             }}
           >
             Amount
           </div>
         </div>
 
-        {/* Particulars Items */}
-        {formData.particulars_items && formData.particulars_items.length > 0 ? (
-          formData.particulars_items.map((item, index) => {
-            const itemAmount = formatAmount(item.amount || "0")
-            return (
-              <div
-                key={index}
-                style={{
-                  display: "flex",
-                  minHeight: "30px",
-                  borderBottom: index < formData.particulars_items!.length - 1 ? "1px solid #000000" : "none",
-                }}
-              >
-                <div
-                  style={{
-                    flex: "2",
-                    fontFamily: "'Arial Narrow', Arial, sans-serif",
-                    fontSize: "12px",
-                    color: "#000000",
-                    padding: "8px",
-                    borderRight: "1px solid #000000", // ADDED VERTICAL LINE
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  {item.description}
-                </div>
-                <div
-                  style={{
-                    flex: "1",
-                    display: "flex",
-                  }}
-                >
-                  <div
-                    style={{
-                      flex: "1",
-                      fontFamily: "'Arial Narrow', Arial, sans-serif",
-                      fontSize: "12px",
-                      color: "#000000",
-                      padding: "8px",
-                      textAlign: "right",
-                      borderRight: "1px solid #000000", // ADDED VERTICAL LINE
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    {item.amount ? `₱${itemAmount.main}` : ""}
-                  </div>
-                  <div
-                    style={{
-                      flex: "1",
-                      fontFamily: "'Arial Narrow', Arial, sans-serif",
-                      fontSize: "12px",
-                      color: "#000000",
-                      padding: "8px",
-                      textAlign: "left",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    {item.amount ? `.${itemAmount.cents}` : ""}
-                  </div>
-                </div>
-              </div>
-            )
-          })
-        ) : (
+        {/* Particulars Content */}
+        <div style={{ minHeight: "120px", display: "flex" }}>
           <div
             style={{
+              flex: "3",
+              fontFamily: "Arial, sans-serif",
+              fontSize: "12px",
+              color: "#000000",
+              padding: "12px",
+              borderRight: "1px solid #000000",
               display: "flex",
-              minHeight: "80px",
+              flexDirection: "column",
+              justifyContent: "flex-start",
             }}
           >
-            <div
-              style={{
-                flex: "2",
-                padding: "8px",
-                borderRight: "1px solid #000000", // ADDED VERTICAL LINE
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: "'Arial Narrow', Arial, sans-serif",
-                  fontSize: "12px",
-                  color: "#000000",
-                  width: "100%",
-                  lineHeight: "1.5",
-                  whiteSpace: "pre-wrap",
-                  minHeight: "60px",
-                }}
-              >
-                {formData.particulars || ""}
-              </div>
-            </div>
-            <div
-              style={{
-                flex: "1",
-                display: "flex",
-              }}
-            >
-              <div
-                style={{
-                  flex: "1",
-                  fontFamily: "'Arial Narrow', Arial, sans-serif",
-                  fontSize: "12px",
-                  color: "#000000",
-                  padding: "8px",
-                  textAlign: "right",
-                  borderRight: "1px solid #000000", // ADDED VERTICAL LINE
-                  display: "flex",
-                  alignItems: "flex-start",
-                }}
-              >
-                {formData.amount ? `₱${formatAmount(formData.amount).main}` : ""}
-              </div>
-              <div
-                style={{
-                  flex: "1",
-                  fontFamily: "'Arial Narrow', Arial, sans-serif",
-                  fontSize: "12px",
-                  color: "#000000",
-                  padding: "8px",
-                  textAlign: "left",
-                  display: "flex",
-                  alignItems: "flex-start",
-                }}
-              >
-                {formData.amount ? `.${formatAmount(formData.amount).cents}` : ""}
-              </div>
-            </div>
+            {formData.particulars_items && formData.particulars_items.length > 0
+              ? formData.particulars_items.map((item, index) => (
+                  <div key={index} style={{ marginBottom: "8px" }}>
+                    {item.description}
+                  </div>
+                ))
+              : formData.particulars || ""}
           </div>
-        )}
+          <div
+            style={{
+              flex: "1",
+              padding: "12px",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-start",
+              position: "relative",
+            }}
+          >
+            {/* Add vertical line in content area */}
+            <div
+              style={{
+                position: "absolute",
+                right: "30px",
+                top: "0",
+                bottom: "0",
+                width: "2px",
+                backgroundColor: "#000000",
+              }}
+            />
+            {formData.particulars_items && formData.particulars_items.length > 0 ? (
+              formData.particulars_items.map((item, index) => {
+                const itemAmount = formatAmount(item.amount || "0")
+                return (
+                  <div key={index} style={{ marginBottom: "8px", display: "flex" }}>
+                    <span
+                      style={{
+                        flex: "1",
+                        textAlign: "right",
+                        fontFamily: "Arial, sans-serif",
+                        fontSize: "12px",
+                        color: "#000000",
+                        paddingRight: "8px",
+                      }}
+                    >
+                      {item.amount ? `₱${itemAmount.main}` : ""}
+                    </span>
+                    <span
+                      style={{
+                        width: "30px",
+                        textAlign: "left",
+                        fontFamily: "Arial, sans-serif",
+                        fontSize: "12px",
+                        color: "#000000",
+                        paddingLeft: "8px",
+                      }}
+                    >
+                      {item.amount ? `.${itemAmount.cents}` : ""}
+                    </span>
+                  </div>
+                )
+              })
+            ) : (
+              <div style={{ display: "flex", height: "100%", alignItems: "flex-start" }}>
+                <span
+                  style={{
+                    flex: "1",
+                    textAlign: "left",
+                    fontFamily: "Arial, sans-serif",
+                    fontSize: "12px",
+                    color: "#000000",
+                    paddingRight: "8px",
+                  }}
+                >
+                  {formData.amount ? `${formatAmount(formData.amount).main}` : ""}
+                </span>
+                <span
+                  style={{
+                    width: "30px",
+                    textAlign: "left",
+                    fontFamily: "Arial, sans-serif",
+                    fontSize: "12px",
+                    color: "#000000",
+                    paddingLeft: "12px",
+                  }}
+                >
+                  {formData.amount ? `.${formatAmount(formData.amount).cents}` : ""}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Total Row */}
         <div
           style={{
             display: "flex",
-  
+            borderTop: "1px solid #000000",
           }}
         >
           <div
             style={{
-              flex: "2",
+              flex: "3",
               fontFamily: "'Times New Roman', serif",
-              fontWeight: "300",
+              fontWeight: "normal",
               fontSize: "14px",
               color: "#000000",
-              padding: "8px",
+              padding: "12px",
               textAlign: "right",
-              borderRight: "1px solid #000000", // ADDED VERTICAL LINE
+              borderRight: "1px solid #000000",
             }}
           >
             TOTAL ₱
+            
           </div>
           <div
             style={{
               flex: "1",
               display: "flex",
+              padding: "12px",
+              position: "relative",
             }}
           >
+            {/* Add vertical line in total row */}
             <div
               style={{
+                position: "absolute",
+                right: "30px",
+                top: "0",
+                bottom: "0",
+                width: "2px",
+                backgroundColor: "#000000",
+              }}
+            />
+            <span
+              style={{
                 flex: "1",
-                fontFamily: "'Arial Narrow', Arial, sans-serif",
-                fontSize: "14px",
+                fontFamily: "Arial, sans-serif",
+                fontSize: "12px",
+                fontWeight: "bold",
                 color: "#000000",
-                padding: "8px",
-                textAlign: "right",
-                borderRight: "1px solid #000000", // ADDED VERTICAL LINE
+                textAlign: "left",
+                paddingRight: "8px",
               }}
             >
               {totalParts.main}
-            </div>
-            <div
+            </span>
+            <span
               style={{
-                flex: "1",
-                fontFamily: "'Arial Narrow', Arial, sans-serif",
+                width: "30px",
+                fontFamily: "Arial, sans-serif",
                 fontSize: "14px",
+                fontWeight: "bold",
                 color: "#000000",
-                padding: "8px",
                 textAlign: "left",
+                paddingLeft: "12px",
               }}
             >
               .{totalParts.cents}
-            </div>
+            </span>
           </div>
         </div>
       </div>
 
       {/* Signatures Section */}
-      <div
-        className="grid grid-cols-2 gap-4 mt-4"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "16px",
-          marginTop: "16px",
-        }}
-      >
+      <div className="flex justify-between">
         {/* Received By */}
-        <div className="space-y-2">
+        <div style={{ width: "45%" }}>
           <div
-            className="font-bold souvenir-font"
             style={{
               fontFamily: "'Times New Roman', serif",
-              fontWeight: "300",
+              fontWeight: "normal",
               fontSize: "14px",
               color: "#000000",
+              marginBottom: "16px",
             }}
           >
             RECEIVED BY:
           </div>
-          <div className="space-y-2">
-            <div className="space-y-1">
-              {/* Signature image */}
-              <div
-                className="flex justify-center"
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  width: "160px",
-                  marginLeft: "16px",
-                }}
-              >
-                {formData.signature ? (
-                  <img
-                    src={formData.signature || "/placeholder.svg"}
-                    alt="Signature"
-                    style={{
-                      maxHeight: "35px",
-                      maxWidth: "100%",
-                      objectFit: "contain",
-                      display: "block",
-                    }}
-                    crossOrigin="anonymous"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.style.display = "none"
-                    }}
-                  />
-                ) : (
-                  <span
-                    className="text-gray-400 arial-narrow-font"
-                    style={{
-                      fontFamily: "'Arial Narrow', Arial, sans-serif",
-                      fontSize: "12px",
-                      color: "#666666",
-                    }}
-                  >
-                    Signature will appear here
-                  </span>
-                )}
-              </div>
-              {/* Name */}
-              <div
-                className="flex justify-center"
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  width: "160px",
-                  marginLeft: "16px",
-                }}
-              >
-                <span
-                  className="arial-narrow-font"
-                  style={{
-                    fontFamily: "'Arial Narrow', Arial, sans-serif",
-                    textAlign: "center",
-                    display: "block",
-                    fontSize: "12px",
-                    color: "#000000",
-                  }}
-                >
-                  {formData.printed_name || ""}
-                </span>
-              </div>
 
-              {/* Static text for "SIGN OVER Printed Name" */}
-              <div
-                className="font-bold text-center souvenir-font"
+          <div
+            className="border-b border-black mb-2"
+            style={{
+              borderBottom: "1px solid #000000",
+              padding: "4px",
+              height: "50px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: "8px",
+            }}
+          >
+            {formData.signature ? (
+              <img
+                src={formData.signature || "/placeholder.svg"}
+                alt="Signature"
                 style={{
-                  fontFamily: "'Times New Roman', serif",
-                  fontWeight: "300",
-                  borderTop: "1px solid #000000",
-                  paddingTop: "8px",
-                  width: "80%",
-                  margin: "0 auto",
-                  fontSize: "12px",
-                  color: "#000000",
-                  textAlign: "center",
+                  maxHeight: "45px",
+                  maxWidth: "200px",
+                  objectFit: "contain",
+                }}
+                crossOrigin="anonymous"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = "none"
+                }}
+              />
+            ) : (
+              <span
+                style={{
+                  color: "#666666",
+                  fontFamily: "Arial, sans-serif",
+                  fontSize: "10px",
                 }}
               >
-                PRINTED NAME
-              </div>
-            </div>
+                Signature will appear here
+              </span>
+            )}
+          </div>
+
+          <div
+            style={{
+              textAlign: "center",
+              marginBottom: "8px",
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "Arial, sans-serif",
+                fontSize: "12px",
+                color: "#000000",
+              }}
+            >
+              {formData.printed_name || ""}
+            </span>
+          </div>
+
+          <div
+            style={{
+              textAlign: "center",
+              fontFamily: "'Times New Roman', serif",
+              fontWeight: "normal",
+              fontSize: "10px",
+              color: "#000000",
+            }}
+          >
+            PRINTED NAME
           </div>
         </div>
 
         {/* Approved By */}
-        <div className="space-y-2">
+        <div style={{ width: "45%" }}>
           <div
-            className="font-bold souvenir-font"
             style={{
               fontFamily: "'Times New Roman', serif",
-              fontWeight: "300",
+              fontWeight: "normal",
               fontSize: "14px",
               color: "#000000",
+              marginBottom: "16px",
             }}
           >
             APPROVED BY:
           </div>
-          <div className="space-y-1">
-            {/* Signature */}
-            <div className="flex items-baseline">
-              <span
-                className="font-medium mr-2 souvenir-font"
-                style={{
-                  fontFamily: "'Times New Roman', serif",
-                  fontWeight: "300",
-                  fontSize: "12px",
-                  color: "#000000",
-                  width: "80px",
-                }}
-              >
-                SIGNATURE:
-              </span>
-              <div
-                className="flex-1 border-b border-black px-2"
-                style={{
-                  flex: "1",
-                  borderBottom: "1px solid #000000",
-                  paddingLeft: "8px",
-                  paddingRight: "8px",
-                  minHeight: "32px",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                {formData.approved_signature ? (
-                  <img
-                    src={formData.approved_signature || "/placeholder.svg"}
-                    alt="Approved Signature"
-                    style={{
-                      maxHeight: "35px",
-                      maxWidth: "100%",
-                      objectFit: "contain",
-                      display: "block",
-                    }}
-                    crossOrigin="anonymous"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement
-                      target.style.display = "none"
-                    }}
-                  />
-                ) : (
-                  <span
-                    className="text-gray-400 arial-narrow-font"
-                    style={{
-                      fontFamily: "'Arial Narrow', Arial, sans-serif",
-                      fontSize: "12px",
-                      color: "#666666",
-                    }}
-                  >
-                    Signature will appear here
-                  </span>
-                )}
-              </div>
-            </div>
-            {/* Printed name */}
-            <div className="flex items-baseline">
-              <span
-                className="font-medium mr-2 souvenir-font"
-                style={{
-                  fontFamily: "'Times New Roman', serif",
-                  fontWeight: "300",
-                  fontSize: "12px",
-                  color: "#000000",
-                  width: "80px",
-                }}
-              >
-                Printed Name:
-              </span>
-              <div
-                className="flex-1 border-b border-black px-2"
-                style={{
-                  flex: "1",
-                  borderBottom: "1px solid #000000",
-                  paddingLeft: "8px",
-                  paddingRight: "8px",
-                  minHeight: "24px",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <span
-                  className="arial-narrow-font"
+
+          <div style={{ marginBottom: "8px", display: "flex", alignItems: "center" }}>
+            <span
+              style={{
+                fontFamily: "'Times New Roman', serif",
+                fontWeight: "normal",
+                fontSize: "12px",
+                color: "#000000",
+                width: "70px",
+              }}
+            >
+              SIGNATURE:
+            </span>
+            <div
+              style={{
+                flex: "1",
+                borderBottom: "1px solid #000000",
+                padding: "4px",
+                height: "35px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {formData.approved_signature ? (
+                <img
+                  src={formData.approved_signature || "/placeholder.svg"}
+                  alt="Approved Signature"
                   style={{
-                    fontFamily: "'Arial Narrow', Arial, sans-serif",
-                    fontSize: "12px",
-                    color: "#000000",
+                    maxHeight: "30px",
+                    maxWidth: "150px",
+                    objectFit: "contain",
+                  }}
+                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.style.display = "none"
+                  }}
+                />
+              ) : (
+                <span
+                  style={{
+                    color: "#666666",
+                    fontFamily: "Arial, sans-serif",
+                    fontSize: "10px",
                   }}
                 >
-                  {formData.approved_name}
+                  Signature will appear here
                 </span>
-              </div>
+              )}
             </div>
-            {/* Date */}
-            <div className="flex items-baseline">
+          </div>
+
+          <div style={{ marginBottom: "8px", display: "flex", alignItems: "center" }}>
+            <span
+              style={{
+                fontFamily: "'Times New Roman', serif",
+                fontWeight: "normal",
+                fontSize: "12px",
+                color: "#000000",
+                width: "70px",
+              }}
+            >
+              Printed name:
+            </span>
+            <div
+              style={{
+                flex: "1",
+                borderBottom: "1px solid #000000",
+                padding: "4px",
+                height: "22px",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
               <span
-                className="font-medium mr-2 souvenir-font"
                 style={{
-                  fontFamily: "'Times New Roman', serif",
-                  fontWeight: "300",
+                  fontFamily: "Arial, sans-serif",
                   fontSize: "12px",
                   color: "#000000",
-                  width: "80px",
                 }}
               >
-                Date:
+                {formData.approved_name || ""}
               </span>
-              <div
-                className="flex-1 border-b border-black px-2"
+            </div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <span
+              style={{
+                fontFamily: "'Times New Roman', serif",
+                fontWeight: "normal",
+                fontSize: "12px",
+                color: "#000000",
+                width: "70px",
+              }}
+            >
+              Date:
+            </span>
+            <div
+              style={{
+                flex: "1",
+                borderBottom: "1px solid #000000",
+                padding: "4px",
+                height: "22px",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <span
                 style={{
-                  flex: "1",
-                  borderBottom: "1px solid #000000",
-                  paddingLeft: "8px",
-                  paddingRight: "8px",
-                  minHeight: "24px",
-                  display: "flex",
-                  alignItems: "center",
+                  fontFamily: "Arial, sans-serif",
+                  fontSize: "12px",
+                  color: "#000000",
                 }}
               >
-                <span
-                  className="arial-narrow-font"
-                  style={{
-                    fontFamily: "'Arial Narrow', Arial, sans-serif",
-                    fontSize: "12px",
-                    color: "#000000",
-                  }}
-                >
-                  {formatDate(formData.approved_date)}
-                </span>
-              </div>
+                {formatDate(formData.approved_date)}
+              </span>
             </div>
           </div>
         </div>

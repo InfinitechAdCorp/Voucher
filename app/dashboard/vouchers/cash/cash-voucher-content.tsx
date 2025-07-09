@@ -7,27 +7,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Download, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Download, Plus, Trash2 } from "lucide-react"
 import Link from "next/link"
 import CashVoucherPreview from "@/components/vouchers/cash-voucher-preview"
+import AccountSelector from "@/components/account-selector"
+import ABICLoader from "@/components/abic-loader"
 import html2canvas from "html2canvas"
 import api from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
-import type { VoucherFormData, ParticularItem } from "@/types"
+import type { VoucherFormData, ParticularItem, Account } from "@/types"
 
 const CashVoucherPageContent = () => {
   const searchParams = useSearchParams()
-  const accountId = searchParams.get("account_id")
+  const initialAccountId = searchParams.get("account_id")
   const previewRef = useRef<HTMLDivElement>(null)
   const [isExporting, setIsExporting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [isLoadingNumber, setIsLoadingNumber] = useState(true)
+  const [isLoadingNumber, setIsLoadingNumber] = useState(false)
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
+  const [selectedAccountId, setSelectedAccountId] = useState<string>(initialAccountId || "")
   const { toast } = useToast()
 
   const [formData, setFormData] = useState<VoucherFormData>({
     amount: "",
     paid_to: "",
-    voucher_number: "", // Will be auto-fetched from database
+    voucher_number: "", // Will be auto-fetched based on selected account
     date: new Date().toISOString().split("T")[0],
     particulars: "",
     particulars_items: [],
@@ -38,62 +42,80 @@ const CashVoucherPageContent = () => {
     approved_date: new Date().toISOString().split("T")[0],
   })
 
-  // Auto-fetch next voucher number when component loads
-  useEffect(() => {
-    const fetchNextVoucherNumber = async () => {
-      try {
-        setIsLoadingNumber(true)
-        const response = await api.getNextCashVoucherNumber()
-        if (response.success) {
-          setFormData((prev) => ({
-            ...prev,
-            voucher_number: response.voucher_number,
-          }))
-        }
-      } catch (error) {
-        console.error("Error fetching next voucher number:", error)
-        toast({
-          title: "Warning",
-          description: "Could not fetch voucher number. Using fallback number.",
-          variant: "destructive",
-        })
-        // Fallback to a default format if API fails
+  // Show loader overlay when any loading state is active
+  const showLoader = isExporting || isSaving || isLoadingNumber
+
+  // Fetch next voucher number when account changes
+  const fetchNextVoucherNumber = async (accountId?: string) => {
+    if (!accountId) {
+      setFormData((prev) => ({ ...prev, voucher_number: "" }))
+      return
+    }
+    try {
+      setIsLoadingNumber(true)
+      const response = await api.getNextCashVoucherNumber(accountId)
+      if (response.success) {
         setFormData((prev) => ({
           ...prev,
-          voucher_number: "443-25-0001",
+          voucher_number: response.voucher_number,
         }))
-      } finally {
-        setIsLoadingNumber(false)
       }
+    } catch (error) {
+      console.error("Error fetching next voucher number:", error)
+      toast({
+        title: "Warning",
+        description: "Could not fetch voucher number. Please select an account.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoadingNumber(false)
     }
+  }
 
-    fetchNextVoucherNumber()
-  }, [toast])
+  // Handle account selection
+  const handleAccountChange = (accountId: string, account: Account) => {
+    setSelectedAccountId(accountId)
+    setSelectedAccount(account)
+    fetchNextVoucherNumber(accountId)
+  }
+
+  // Auto-select account if provided in URL
+  useEffect(() => {
+    if (initialAccountId && !selectedAccountId) {
+      setSelectedAccountId(initialAccountId)
+    }
+  }, [initialAccountId, selectedAccountId])
+
+  // Fetch voucher number when selectedAccountId changes
+  useEffect(() => {
+    if (selectedAccountId) {
+      fetchNextVoucherNumber(selectedAccountId)
+    }
+  }, [selectedAccountId])
 
   const validateForm = () => {
     const errors: string[] = []
-
+    // Check if account is selected
+    if (!selectedAccountId) {
+      errors.push("Please select an account")
+    }
     // Check required fields
     if (!formData.paid_to.trim()) {
       errors.push("Paid to is required")
     }
-
     if (!formData.date) {
       errors.push("Date is required")
     }
-
     // Check if we have either particulars text or particular items
     const hasParticularsText = formData.particulars && formData.particulars.trim()
     const hasParticularItems = formData.particulars_items && formData.particulars_items.length > 0
-
     if (!hasParticularsText && !hasParticularItems) {
       errors.push("Particulars are required (either text or items)")
     }
-
     // Check amount - either main amount or particular items should have amounts
     if (hasParticularItems) {
       const hasValidItems = formData.particulars_items?.some(
-        (item) => item.description.trim() && item.amount && Number.parseFloat(item.amount) > 0
+        (item) => item.description.trim() && item.amount && Number.parseFloat(item.amount) > 0,
       )
       if (!hasValidItems) {
         errors.push("At least one particular item must have a description and amount")
@@ -101,19 +123,15 @@ const CashVoucherPageContent = () => {
     } else if (!formData.amount || Number.parseFloat(formData.amount) <= 0) {
       errors.push("Amount must be greater than 0")
     }
-
     if (!formData.printed_name.trim()) {
       errors.push("Received by (Printed Name) is required")
     }
-
     if (!formData.approved_name.trim()) {
       errors.push("Approved by (Printed Name) is required")
     }
-
     if (!formData.approved_date) {
       errors.push("Approved date is required")
     }
-
     return errors
   }
 
@@ -185,7 +203,6 @@ const CashVoucherPageContent = () => {
     if (!previewRef.current) return
 
     setIsExporting(true)
-
     try {
       // Create a temporary landscape container for export with reduced height
       const exportContainer = document.createElement("div")
@@ -215,7 +232,6 @@ const CashVoucherPageContent = () => {
             </div>
             <div style="width: 100px;"></div>
           </div>
-
           <!-- Amount and Voucher Info Row -->
           <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
             <div style="display: flex; align-items: baseline;">
@@ -231,7 +247,6 @@ const CashVoucherPageContent = () => {
               </span>
             </div>
           </div>
-
           <!-- Paid To and Date Row -->
           <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
             <div style="display: flex; align-items: baseline;">
@@ -247,7 +262,6 @@ const CashVoucherPageContent = () => {
               </span>
             </div>
           </div>
-
           <!-- Particulars Table -->
           <div style="border: 2px solid #000000; margin-bottom: 8px;">
             <!-- Table Header -->
@@ -259,7 +273,6 @@ const CashVoucherPageContent = () => {
                 Amount
               </div>
             </div>
-
             <!-- Particulars Content -->
             <div style="min-height: 100px; display: flex;">
               <div style="flex: 3; padding: 10px; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000; border-right: 1px solid #000000;">
@@ -271,50 +284,52 @@ const CashVoucherPageContent = () => {
                     : formData.particulars || ""
                 }
               </div>
-              <div style="flex: 1; padding: 10px;">
+              <div style="flex: 1; padding: 10px; position: relative;">
+                <!-- Move vertical line further from right edge -->
+                <div style="position: absolute; right: 50px; top: 0; bottom: 0; width: 2px; background-color: #000000;"></div>
                 ${
                   formData.particulars_items && formData.particulars_items.length > 0
                     ? formData.particulars_items
                         .map((item) => {
                           const itemAmount = formatAmount(item.amount || "0")
                           return `<div style="margin-bottom: 6px; display: flex;">
-                        <span style="flex: 1; text-align: right; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000;">
-                          ${item.amount ? `₱${itemAmount.main}` : ""}
-                        </span>
-                        <span style="width: 30px; text-align: left; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000;">
-                          ${item.amount ? `.${itemAmount.cents}` : ""}
-                        </span>
-                      </div>`
+                <span style="flex: 1; text-align: left; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000; padding-left: 8px; padding-right: 8px;">
+                  ${item.amount ? `${itemAmount.main}` : ""}
+                </span>
+                <span style="width: 40px; text-align: left; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000; padding-left: 8px;">
+                  ${item.amount ? `.${itemAmount.cents}` : ""}
+                </span>
+              </div>`
                         })
                         .join("")
                     : `<div style="display: flex; height: 100%; align-items: flex-start;">
-                      <span style="flex: 1; text-align: right; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000;">
-                        ${formData.amount ? `₱${formatAmount(formData.amount).main}` : ""}
-                      </span>
-                      <span style="width: 30px; text-align: left; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000;">
-                        ${formData.amount ? `.${formatAmount(formData.amount).cents}` : ""}
-                      </span>
-                    </div>`
+        <span style="flex: 1; text-align: left; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000; padding-left: 8px; padding-right: 8px;">
+          ${formData.amount ? `${formatAmount(formData.amount).main}` : ""}
+        </span>
+        <span style="width: 40px; text-align: left; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 14px; color: #000000; padding-left: 8px;">
+          ${formData.amount ? `.${formatAmount(formData.amount).cents}` : ""}
+        </span>
+      </div>`
                 }
               </div>
             </div>
-
             <!-- Total Row -->
             <div style="display: flex;">
               <div style="flex: 3; padding: 10px; text-align: right; font-family: 'Times New Roman', serif; font-weight: 300; font-size: 16px; color: #000000; border-right: 1px solid #000000;">
                 TOTAL ₱
               </div>
-              <div style="flex: 1; padding: 10px; display: flex;">
-                <span style="flex: 1; text-align: right; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 16px; font-weight: bold; color: #000000;">
+              <div style="flex: 1; padding: 10px; display: flex; position: relative;">
+                <!-- Move vertical line further from right edge -->
+                <div style="position: absolute; right: 50px; top: 0; bottom: 0; width: 2px; background-color: #000000;"></div>
+                <span style="flex: 1; text-align: left; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 16px; font-weight: bold; color: #000000; padding-left: 8px; padding-right: 8px;">
                   ${totalParts.main}
                 </span>
-                <span style="width: 30px; text-align: left; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 16px; font-weight: bold; color: #000000;">
+                <span style="width: 40px; text-align: left; font-family: 'Arial Narrow', Arial, sans-serif; font-size: 16px; font-weight: bold; color: #000000; padding-left: 8px;">
                   .${totalParts.cents}
                 </span>
               </div>
             </div>
           </div>
-
           <!-- Signatures Section -->
           <div style="display: flex; justify-content: space-between; margin-top: 8px;">
             <!-- Received By -->
@@ -341,7 +356,6 @@ const CashVoucherPageContent = () => {
                 Signature Over Printed Name
               </div>
             </div>
-
             <!-- Approved By - Aligned to the right edge -->
             <div style="width: 280px; margin-left: auto;">
               <div style="font-family: 'Times New Roman', serif; font-weight: 300; font-size: 16px; color: #000000; margin-bottom: 12px;">
@@ -433,7 +447,6 @@ const CashVoucherPageContent = () => {
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
       const data = imageData.data
       let hasContent = false
-
       for (let i = 0; i < data.length; i += 4) {
         if (data[i] !== 255 || data[i + 1] !== 255 || data[i + 2] !== 255) {
           hasContent = true
@@ -484,17 +497,16 @@ const CashVoucherPageContent = () => {
 
     setIsSaving(true)
     try {
-      // Use the pre-fetched voucher number - don't remove it from the data
+      // Include account_id in the data to save
       const dataToSave = {
         ...formData,
-        // The voucher_number is already set from the API call
+        account_id: selectedAccountId ? Number.parseInt(selectedAccountId) : undefined,
       }
 
       // Debug: Log the data being sent
       console.log("Saving voucher with data:", dataToSave)
 
       const response = await api.createCashVoucher(dataToSave)
-
       if (response.success) {
         toast({
           title: "Success",
@@ -524,182 +536,309 @@ const CashVoucherPageContent = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Action buttons - moved to top */}
-      <div className="flex items-center justify-between">
-        <Link href="/dashboard/accounts">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Accounts
-          </Button>
-        </Link>
-        <div className="flex gap-2">
-          <Button onClick={saveVoucher} variant="outline" disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save Voucher"}
-          </Button>
-          <Button onClick={exportAsJPEG} disabled={isExporting} className="flex items-center">
-            <Download className="h-4 w-4 mr-2" />
-            {isExporting ? "Exporting..." : "Export as JPEG"}
-          </Button>
+    <div className="relative">
+      {/* Loader Overlay */}
+      {showLoader && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 shadow-2xl">
+            <ABICLoader
+              size="lg"
+              text={
+                isExporting
+                  ? "Exporting voucher to JPEG..."
+                  : isSaving
+                    ? "Saving voucher to database..."
+                    : isLoadingNumber
+                      ? "Generating voucher number..."
+                      : "Processing..."
+              }
+            />
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Form Section - Improved Layout */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Voucher Details</CardTitle>
-            <CardDescription>Fill in the voucher information</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Basic Information Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Basic Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="voucher_number">Voucher No.</Label>
-                  <Input
-                    id="voucher_number"
-                    value={isLoadingNumber ? "Loading..." : formData.voucher_number}
-                    disabled
-                    placeholder="Loading next number..."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="date">
-                    Date <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => updateFormData("date", e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="paid_to">
-                  Paid to <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="paid_to"
-                  value={formData.paid_to}
-                  onChange={(e) => updateFormData("paid_to", e.target.value)}
-                  placeholder="Enter recipient name"
-                  required
+      <div className="space-y-6">
+        {/* Action buttons - moved to top */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <Link href="/dashboard/accounts">
+            <Button variant="ghost" size="sm" className="w-full sm:w-auto">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Accounts
+            </Button>
+          </Link>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              onClick={saveVoucher}
+              variant="outline"
+              disabled={isSaving}
+              className="w-full sm:w-auto bg-transparent"
+            >
+              {isSaving ? "Saving..." : "Save Voucher"}
+            </Button>
+            <Button
+              onClick={exportAsJPEG}
+              disabled={isExporting}
+              className="flex items-center w-full sm:w-auto"
+              style={{
+                backgroundColor: isExporting ? "#a24c9a" : "#b94ba7",
+                color: "white",
+                cursor: isExporting ? "not-allowed" : "pointer",
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {isExporting ? "Exporting..." : "Export as JPEG"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Form Section - Improved Layout */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Voucher Details</CardTitle>
+              <CardDescription>Fill in the voucher information</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Account Selection Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Account Selection</h3>
+                <AccountSelector
+                  selectedAccountId={selectedAccountId}
+                  onAccountChange={handleAccountChange}
+                  required={true}
                 />
-              </div>
-            </div>
-
-            {/* Particulars Section */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b pb-2">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Particulars <span className="text-red-500">*</span>
-                </h3>
-                <Button type="button" onClick={addParticularItem} size="sm" variant="outline">
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Item
-                </Button>
-              </div>
-
-              {formData.particulars_items && formData.particulars_items.length > 0 ? (
-                <div className="space-y-3">
-                  {formData.particulars_items.map((item, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-2 items-end p-3 bg-gray-50 rounded-lg">
-                      <div className="col-span-7">
-                        <Label className="text-sm">
-                          Description <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          placeholder="Enter description"
-                          value={item.description}
-                          onChange={(e) => updateParticularItem(index, "description", e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="col-span-4">
-                        <Label className="text-sm">
-                          Amount <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          placeholder="0.00"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={item.amount}
-                          onChange={(e) => updateParticularItem(index, "amount", e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <Button type="button" onClick={() => removeParticularItem(index)} size="sm" variant="outline">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                {selectedAccount && (
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="text-sm">
+                      <p className="font-medium text-blue-900">Selected Account:</p>
+                      <p className="text-blue-700">
+                        {selectedAccount.account_name} (#{selectedAccount.account_number})
+                      </p>
+                      {selectedAccount.account_type && (
+                        <p className="text-blue-600">Type: {selectedAccount.account_type}</p>
+                      )}
                     </div>
-                  ))}
-                  <div className="text-sm text-gray-600 mt-2 p-2 bg-blue-50 rounded">
-                    <strong>
-                      Total: ₱{totalParts.main}.{totalParts.cents}
-                    </strong>
                   </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
+                )}
+              </div>
+
+              {/* Basic Information Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Basic Information</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="particulars">
-                      Particulars (Text) <span className="text-red-500">*</span>
-                    </Label>
-                    <Textarea
-                      id="particulars"
-                      value={formData.particulars}
-                      onChange={(e) => updateFormData("particulars", e.target.value)}
-                      placeholder="Enter particulars or use Add Item button above"
-                      rows={4}
-                      required
+                    <Label htmlFor="voucher_number">Voucher No.</Label>
+                    <Input
+                      id="voucher_number"
+                      value={
+                        isLoadingNumber
+                          ? "Loading..."
+                          : formData.voucher_number ||
+                            (selectedAccountId ? "Select account first" : "No account selected")
+                      }
+                      disabled
+                      placeholder="Select an account to generate voucher number"
+                      className={!selectedAccountId ? "text-gray-400" : ""}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="amount">
-                      Amount <span className="text-red-500">*</span>
+                    <Label htmlFor="date">
+                      Date <span className="text-red-500">*</span>
                     </Label>
                     <Input
-                      id="amount"
-                      value={formData.amount}
-                      onChange={(e) => updateFormData("amount", e.target.value)}
-                      placeholder="500000.00"
-                      type="number"
-                      step="0.01"
-                      min="0"
+                      id="date"
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => updateFormData("date", e.target.value)}
                       required
                     />
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* Signatures Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Signatures</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="printed_name">
-                    Received By (Printed Name) <span className="text-red-500">*</span>
+                  <Label htmlFor="paid_to">
+                    Paid to <span className="text-red-500">*</span>
                   </Label>
                   <Input
-                    id="printed_name"
-                    value={formData.printed_name}
-                    onChange={(e) => updateFormData("printed_name", e.target.value)}
-                    placeholder="Enter printed name"
+                    id="paid_to"
+                    value={formData.paid_to}
+                    onChange={(e) => updateFormData("paid_to", e.target.value)}
+                    placeholder="Enter recipient name"
                     required
                   />
                 </div>
+              </div>
+
+              {/* Particulars Section */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-2 gap-2">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Particulars <span className="text-red-500">*</span>
+                  </h3>
+                  <Button
+                    type="button"
+                    onClick={addParticularItem}
+                    size="sm"
+                    variant="outline"
+                    className="w-full sm:w-auto bg-transparent"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Item
+                  </Button>
+                </div>
+                {formData.particulars_items && formData.particulars_items.length > 0 ? (
+                  <div className="space-y-3">
+                    {formData.particulars_items.map((item, index) => (
+                      <div key={index} className="grid grid-cols-1 gap-2 items-end p-3 bg-gray-50 rounded-lg">
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                          <div className="sm:col-span-7">
+                            <Label className="text-sm">
+                              Description <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              placeholder="Enter description"
+                              value={item.description}
+                              onChange={(e) => updateParticularItem(index, "description", e.target.value)}
+                              required
+                            />
+                          </div>
+                          <div className="sm:col-span-4">
+                            <Label className="text-sm">
+                              Amount <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              placeholder="0.00"
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={item.amount}
+                              onChange={(e) => updateParticularItem(index, "amount", e.target.value)}
+                              required
+                            />
+                          </div>
+                          <div className="sm:col-span-1">
+                            <Button
+                              type="button"
+                              onClick={() => removeParticularItem(index)}
+                              size="sm"
+                              variant="outline"
+                              className="w-full"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="text-sm text-gray-600 mt-2 p-2 bg-blue-50 rounded">
+                      <strong>
+                        Total: ₱{totalParts.main}.{totalParts.cents}
+                      </strong>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="particulars">
+                        Particulars (Text) <span className="text-red-500">*</span>
+                      </Label>
+                      <Textarea
+                        id="particulars"
+                        value={formData.particulars}
+                        onChange={(e) => updateFormData("particulars", e.target.value)}
+                        placeholder="Enter particulars or use Add Item button above"
+                        rows={4}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="amount">
+                        Amount <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="amount"
+                        value={formData.amount}
+                        onChange={(e) => updateFormData("amount", e.target.value)}
+                        placeholder="500000.00"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Signatures Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Signatures</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="printed_name">
+                      Received By (Printed Name) <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="printed_name"
+                      value={formData.printed_name}
+                      onChange={(e) => updateFormData("printed_name", e.target.value)}
+                      placeholder="Enter printed name"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signature">Received By Signature</Label>
+                    <Input
+                      id="signature"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          const reader = new FileReader()
+                          reader.onload = (event) => {
+                            updateFormData("signature", event.target?.result as string)
+                          }
+                          reader.readAsDataURL(file)
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Approval Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Approval Information</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="approved_name">
+                      Approved By (Printed Name) <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="approved_name"
+                      value={formData.approved_name}
+                      onChange={(e) => updateFormData("approved_name", e.target.value)}
+                      placeholder="Enter printed name"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="approved_date">
+                      Approved Date <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="approved_date"
+                      type="date"
+                      value={formData.approved_date}
+                      onChange={(e) => updateFormData("approved_date", e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signature">Received By Signature</Label>
+                  <Label htmlFor="approved_signature">Approved By Signature</Label>
                   <Input
-                    id="signature"
+                    id="approved_signature"
                     type="file"
                     accept="image/*"
                     onChange={(e) => {
@@ -707,7 +846,7 @@ const CashVoucherPageContent = () => {
                       if (file) {
                         const reader = new FileReader()
                         reader.onload = (event) => {
-                          updateFormData("signature", event.target?.result as string)
+                          updateFormData("approved_signature", event.target?.result as string)
                         }
                         reader.readAsDataURL(file)
                       }
@@ -715,75 +854,26 @@ const CashVoucherPageContent = () => {
                   />
                 </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Approval Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Approval Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="approved_name">
-                    Approved By (Printed Name) <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="approved_name"
-                    value={formData.approved_name}
-                    onChange={(e) => updateFormData("approved_name", e.target.value)}
-                    placeholder="Enter printed name"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="approved_date">
-                    Approved Date <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="approved_date"
-                    type="date"
-                    value={formData.approved_date}
-                    onChange={(e) => updateFormData("approved_date", e.target.value)}
-                    required
-                  />
-                </div>
+          {/* Preview Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Live Preview</CardTitle>
+              <CardDescription>Real-time preview of your cash voucher</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div
+                ref={previewRef}
+                className="border border-gray-300 p-4 bg-white voucher-container overflow-x-auto"
+                data-voucher-container
+              >
+                <CashVoucherPreview formData={formData} />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="approved_signature">Approved By Signature</Label>
-                <Input
-                  id="approved_signature"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) {
-                      const reader = new FileReader()
-                      reader.onload = (event) => {
-                        updateFormData("approved_signature", event.target?.result as string)
-                      }
-                      reader.readAsDataURL(file)
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Preview Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Live Preview</CardTitle>
-            <CardDescription>Real-time preview of your cash voucher</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div
-              ref={previewRef}
-              className="border border-gray-300 p-4 bg-white voucher-container"
-              data-voucher-container
-            >
-              <CashVoucherPreview formData={formData} />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )

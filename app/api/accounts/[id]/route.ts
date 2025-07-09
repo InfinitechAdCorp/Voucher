@@ -7,23 +7,26 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params
     const accountId = Number.parseInt(id)
-    const body = await request.json()
-    const { account_name, account_number, user_id } = body
 
-    if (!account_name || !account_number || !user_id) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    if (isNaN(accountId)) {
+      return NextResponse.json({ error: "Invalid account ID" }, { status: 400 })
     }
 
-    const accountIndex = accounts.findIndex((acc) => acc.id === accountId && acc.user_id === user_id)
+    const body = await request.json()
+    const { account_name, account_number, user_id = 1 } = body
+
+    if (!account_name || !account_number) {
+      return NextResponse.json({ error: "Account name and number are required" }, { status: 400 })
+    }
+
+    const accountIndex = accounts.findIndex((acc) => acc.id === accountId)
 
     if (accountIndex === -1) {
       return NextResponse.json({ error: "Account not found" }, { status: 404 })
     }
 
-    // Check if account number already exists for this user (excluding current account)
-    const existingAccount = accounts.find(
-      (acc) => acc.account_number === account_number && acc.user_id === user_id && acc.id !== accountId,
-    )
+    // Check if account number already exists for a different account
+    const existingAccount = accounts.find((acc) => acc.account_number === account_number && acc.id !== accountId)
 
     if (existingAccount) {
       return NextResponse.json({ error: "Account number already exists" }, { status: 400 })
@@ -34,14 +37,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       ...accounts[accountIndex],
       account_name,
       account_number,
+      user_id,
       updated_at: new Date().toISOString(),
     }
 
     return NextResponse.json({
       success: true,
+      message: "Account updated successfully",
       account: accounts[accountIndex],
     })
   } catch (error) {
+    console.error("Error in PUT /api/accounts/[id]:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
@@ -50,14 +56,12 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const { id } = await params
     const accountId = Number.parseInt(id)
-    const { searchParams } = new URL(request.url)
-    const user_id = searchParams.get("user_id")
 
-    if (!user_id) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400 })
+    if (isNaN(accountId)) {
+      return NextResponse.json({ error: "Invalid account ID" }, { status: 400 })
     }
 
-    const accountIndex = accounts.findIndex((acc) => acc.id === accountId && acc.user_id === Number.parseInt(user_id))
+    const accountIndex = accounts.findIndex((acc) => acc.id === accountId)
 
     if (accountIndex === -1) {
       return NextResponse.json({ error: "Account not found" }, { status: 404 })
@@ -72,6 +76,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       account: deletedAccount,
     })
   } catch (error) {
+    console.error("Error in DELETE /api/accounts/[id]:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

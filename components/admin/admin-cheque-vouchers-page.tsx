@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -24,11 +23,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Search, Edit, Trash2, Eye, Plus, FileText } from 'lucide-react'
+import { Search, Edit, Trash2, Eye, Plus, FileText } from "lucide-react"
 import api from "@/lib/api"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import ChequeVoucherPreview from "@/components/vouchers/cheque-voucher-preview"
+import ABICLoader from "@/components/abic-loader"
 
 interface ChequeVoucher {
   id: number
@@ -56,7 +56,6 @@ export default function AdminChequeVouchersPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-
   const { toast } = useToast()
 
   // Edit form state
@@ -114,7 +113,6 @@ export default function AdminChequeVouchersPage() {
 
     try {
       setIsSaving(true)
-
       // Add validation before saving
       const errors = []
       if (!editFormData.account_no.trim()) errors.push("Account No. is required")
@@ -138,6 +136,7 @@ export default function AdminChequeVouchersPage() {
       }
 
       const response = await api.updateChequeVoucher(editingVoucher.id.toString(), editFormData)
+
       if (response.success) {
         await fetchVouchers()
         setIsEditDialogOpen(false)
@@ -164,6 +163,7 @@ export default function AdminChequeVouchersPage() {
 
     try {
       const response = await api.deleteChequeVoucher(deletingVoucher.id.toString())
+
       if (response.success) {
         await fetchVouchers()
         setIsDeleteDialogOpen(false)
@@ -210,19 +210,25 @@ export default function AdminChequeVouchersPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header Section */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between max-w-7xl mx-auto gap-4">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <FileText className="h-6 w-6 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Cheque Vouchers</h1>
-              <p className="text-gray-600">Manage all cheque vouchers in the system</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Cheque Vouchers</h1>
+              <p className="text-sm sm:text-base text-gray-600">Manage all cheque vouchers in the system</p>
             </div>
           </div>
           <Link href="/dashboard/vouchers/cheque">
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              className="w-full sm:w-auto"
+              style={{
+                backgroundColor: "#b94ba7", // Background color
+                color: "white", // Text color (adjust as needed)
+              }}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Create New Voucher
             </Button>
@@ -231,24 +237,25 @@ export default function AdminChequeVouchersPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <Card className="shadow-sm border-0">
           <CardHeader className="bg-white border-b border-gray-100">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-lg font-semibold text-gray-900">All Cheque Vouchers</CardTitle>
                 <CardDescription className="text-gray-600">
-                  {filteredVouchers.length} voucher{filteredVouchers.length !== 1 ? 's' : ''} found
+                  {filteredVouchers.length} voucher
+                  {filteredVouchers.length !== 1 ? "s" : ""} found
                 </CardDescription>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="w-full sm:w-auto">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Search vouchers..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-80 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-10 w-full sm:w-80 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -256,93 +263,174 @@ export default function AdminChequeVouchersPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="text-center py-12">
-                <div className="inline-flex items-center px-4 py-2 font-semibold leading-6 text-sm shadow rounded-md text-blue-500 bg-blue-100">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Loading vouchers...
-                </div>
+              <div className="flex items-center justify-center py-12">
+                <ABICLoader size="lg" text="Loading vouchers..." className="animate-fade-in" />
               </div>
             ) : (
-              <div className="overflow-hidden">
-                <Table>
-                  <TableHeader className="bg-gray-50">
-                    <TableRow className="border-gray-200">
-                      <TableHead className="font-semibold text-gray-900">Cheque No.</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Account No.</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Amount</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Paid To</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Pay To</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Cheque Date</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Created</TableHead>
-                      <TableHead className="text-right font-semibold text-gray-900">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredVouchers.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={8} className="text-center py-12 text-gray-500">
-                          <div className="flex flex-col items-center space-y-2">
-                            <FileText className="h-8 w-8 text-gray-300" />
-                            <p>No vouchers found</p>
-                            {searchTerm && (
-                              <p className="text-sm">Try adjusting your search terms</p>
-                            )}
-                          </div>
-                        </TableCell>
+              <>
+                {/* Desktop Table View */}
+                <div className="hidden lg:block overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-gray-50">
+                      <TableRow className="border-gray-200">
+                        <TableHead className="font-semibold text-gray-900">Cheque No.</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Account No.</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Amount</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Paid To</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Pay To</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Cheque Date</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Created</TableHead>
+                        <TableHead className="text-right font-semibold text-gray-900">Actions</TableHead>
                       </TableRow>
-                    ) : (
-                      filteredVouchers.map((voucher, index) => (
-                        <TableRow key={voucher.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                          <TableCell className="font-medium text-blue-600">{voucher.cheque_no}</TableCell>
-                          <TableCell className="text-gray-900">{voucher.account_no}</TableCell>
-                          <TableCell className="font-semibold text-green-600">{formatAmount(voucher.amount)}</TableCell>
-                          <TableCell className="text-gray-900">{voucher.paid_to}</TableCell>
-                          <TableCell className="text-gray-900">{voucher.pay_to}</TableCell>
-                          <TableCell className="text-gray-600">{formatDate(voucher.cheque_date)}</TableCell>
-                          <TableCell className="text-gray-600">{formatDate(voucher.created_at)}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end space-x-1">
+                    </TableHeader>
+                    <TableBody>
+                      {filteredVouchers.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center py-12 text-gray-500">
+                            <div className="flex flex-col items-center space-y-2">
+                              <FileText className="h-8 w-8 text-gray-300" />
+                              <p>No vouchers found</p>
+                              {searchTerm && <p className="text-sm">Try adjusting your search terms</p>}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredVouchers.map((voucher, index) => (
+                          <TableRow key={voucher.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                            <TableCell className="font-medium" style={{ color: "#b94ba7" }}>
+                              {voucher.cheque_no}
+                            </TableCell>
+                            <TableCell className="text-gray-900">{voucher.account_no}</TableCell>
+                            <TableCell className="font-semibold" style={{ color: "#b94ba7" }}>
+                              {formatAmount(voucher.amount)}
+                            </TableCell>
+                            <TableCell className="text-gray-900">{voucher.paid_to}</TableCell>
+                            <TableCell className="text-gray-900">{voucher.pay_to}</TableCell>
+                            <TableCell className="text-gray-600">{formatDate(voucher.cheque_date)}</TableCell>
+                            <TableCell className="text-gray-600">{formatDate(voucher.created_at)}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end space-x-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setViewingVoucher(voucher)
+                                    setIsViewDialogOpen(true)
+                                  }}
+                                  style={{
+                                    color: "#b94ba7", // Text color
+                                    backgroundColor: "transparent", // No background color
+                                  }}
+                                  className="hover:opacity-80"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEdit(voucher)}
+                                  className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setDeletingVoucher(voucher)
+                                    setIsDeleteDialogOpen(true)
+                                  }}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="lg:hidden p-4 space-y-4">
+                  {filteredVouchers.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                      <div className="flex flex-col items-center space-y-2">
+                        <FileText className="h-8 w-8 text-gray-300" />
+                        <p>No vouchers found</p>
+                        {searchTerm && <p className="text-sm">Try adjusting your search terms</p>}
+                      </div>
+                    </div>
+                  ) : (
+                    filteredVouchers.map((voucher) => (
+                      <Card key={voucher.id} className="border border-gray-200">
+                        <CardContent className="p-4">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="font-medium text-blue-600">{voucher.cheque_no}</h3>
+                                <p className="text-sm text-gray-600">Account: {voucher.account_no}</p>
+                                <p className="text-lg font-semibold text-green-600">{formatAmount(voucher.amount)}</p>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Paid to:</span> {voucher.paid_to}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Pay to:</span> {voucher.pay_to}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Cheque Date:</span> {formatDate(voucher.cheque_date)}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Created:</span> {formatDate(voucher.created_at)}
+                              </p>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-2 pt-2">
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => {
                                   setViewingVoucher(voucher)
                                   setIsViewDialogOpen(true)
                                 }}
-                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50"
                               >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => handleEdit(voucher)}
-                                className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
-                              >
-                                <Edit className="h-4 w-4" />
+                                <Eye className="h-4 w-4 mr-2" />
+                                View
                               </Button>
                               <Button
-                                variant="ghost"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleEdit(voucher)}
+                                className="flex-1"
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 onClick={() => {
                                   setDeletingVoucher(voucher)
                                   setIsDeleteDialogOpen(true)
                                 }}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
                               </Button>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -350,13 +438,13 @@ export default function AdminChequeVouchersPage() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Cheque Voucher</DialogTitle>
             <DialogDescription>Update the details of cheque {editingVoucher?.cheque_no}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="account_no">Account No.</Label>
                 <Input
@@ -385,8 +473,7 @@ export default function AdminChequeVouchersPage() {
                 />
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="paid_to">Paid To</Label>
                 <Input
@@ -414,8 +501,7 @@ export default function AdminChequeVouchersPage() {
                 />
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="cheque_date">Cheque Date</Label>
                 <Input
@@ -446,8 +532,7 @@ export default function AdminChequeVouchersPage() {
                 />
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="printed_name">Printed Name</Label>
                 <Input
@@ -477,11 +562,11 @@ export default function AdminChequeVouchersPage() {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={handleSaveEdit} disabled={isSaving}>
+            <Button onClick={handleSaveEdit} disabled={isSaving} className="w-full sm:w-auto">
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
@@ -498,7 +583,7 @@ export default function AdminChequeVouchersPage() {
           {viewingVoucher && (
             <div className="py-4">
               {/* Voucher Preview */}
-              <div className="border border-gray-300 p-6 bg-white rounded-lg">
+              <div className="border border-gray-300 p-6 bg-white rounded-lg overflow-x-auto">
                 <ChequeVoucherPreview
                   formData={{
                     account_no: viewingVoucher.account_no || "",
@@ -514,9 +599,8 @@ export default function AdminChequeVouchersPage() {
                   }}
                 />
               </div>
-
               {/* Additional Info */}
-              <div className="mt-6 grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                 <div>
                   <Label className="font-medium text-sm text-gray-600">Created:</Label>
                   <div className="text-sm">{formatDate(viewingVoucher.created_at)}</div>
@@ -537,7 +621,7 @@ export default function AdminChequeVouchersPage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)} className="w-full sm:w-auto">
               Close
             </Button>
           </DialogFooter>
@@ -554,9 +638,11 @@ export default function AdminChequeVouchersPage() {
               <strong>{deletingVoucher?.cheque_no}</strong> and remove all associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="w-full sm:w-auto">
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

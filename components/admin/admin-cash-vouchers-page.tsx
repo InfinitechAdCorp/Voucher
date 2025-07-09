@@ -2,11 +2,24 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import {
   Dialog,
   DialogContent,
@@ -26,11 +39,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
-import { Search, Edit, X, Eye, Plus, TrashIcon, Banknote } from "lucide-react"
+import { Search, Edit, X, Eye, Plus, TrashIcon, Banknote } from 'lucide-react'
 import api from "@/lib/api"
 import Link from "next/link"
 import { useToast } from "@/hooks/use-toast"
 import CashVoucherPreview from "@/components/vouchers/cash-voucher-preview"
+import ABICLoader from "@/components/abic-loader"
 
 interface CashVoucher {
   id: number
@@ -43,7 +57,7 @@ interface CashVoucher {
   printed_name?: string
   approved_name?: string
   approved_date?: string
-  status: "draft" | "approved" | "paid" | "cancelled"
+  status: "active" | "approved" | "paid" | "cancelled"
   created_at: string
   updated_at: string
 }
@@ -64,7 +78,6 @@ export default function AdminCashVouchersPage() {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-
   const { toast } = useToast()
 
   // Edit form state
@@ -77,7 +90,7 @@ export default function AdminCashVouchersPage() {
     printed_name: "",
     approved_name: "",
     approved_date: "",
-    status: "draft" as "draft" | "approved" | "paid" | "cancelled",
+    status: "active" as "active" | "approved" | "paid" | "cancelled",
   })
 
   useEffect(() => {
@@ -114,7 +127,7 @@ export default function AdminCashVouchersPage() {
       printed_name: voucher.printed_name || "",
       approved_name: voucher.approved_name || "",
       approved_date: voucher.approved_date || "",
-      status: voucher.status || "draft",
+      status: voucher.status || "active",
     })
     setIsEditDialogOpen(true)
   }
@@ -124,12 +137,14 @@ export default function AdminCashVouchersPage() {
 
     try {
       setIsSaving(true)
-
       // Add validation before saving
       const errors = []
       if (!editFormData.paid_to.trim()) errors.push("Paid to is required")
       if (!editFormData.date) errors.push("Date is required")
-      if (editFormData.particulars_items.length === 0 && !editFormData.particulars.trim()) {
+      if (
+        editFormData.particulars_items.length === 0 &&
+        !editFormData.particulars.trim()
+      ) {
         errors.push("Particulars are required")
       }
       if (
@@ -204,7 +219,9 @@ export default function AdminCashVouchersPage() {
   const updateParticularItem = (index: number, field: keyof ParticularItem, value: string) => {
     setEditFormData((prev) => ({
       ...prev,
-      particulars_items: prev.particulars_items.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
+      particulars_items: prev.particulars_items.map((item, i) =>
+        i === index ? { ...item, [field]: value } : item
+      ),
     }))
   }
 
@@ -219,7 +236,7 @@ export default function AdminCashVouchersPage() {
     (voucher) =>
       voucher.voucher_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       voucher.paid_to.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (voucher.particulars && voucher.particulars.toLowerCase().includes(searchTerm.toLowerCase())),
+      (voucher.particulars && voucher.particulars.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
   const formatAmount = (amount: number) => {
@@ -240,14 +257,24 @@ export default function AdminCashVouchersPage() {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      draft: { color: "bg-gray-100 text-gray-800 border-gray-200", label: "Draft" },
-      approved: { color: "bg-blue-100 text-blue-800 border-blue-200", label: "Approved" },
-      paid: { color: "bg-green-100 text-green-800 border-green-200", label: "Paid" },
-      cancelled: { color: "bg-red-100 text-red-800 border-red-200", label: "Cancelled" },
+      active: {
+        color: "bg-gray-100 text-gray-800 border-gray-200",
+        label: "active",
+      },
+      approved: {
+        color: "bg-blue-100 text-blue-800 border-blue-200",
+        label: "Approved",
+      },
+      paid: {
+        color: "bg-green-100 text-green-800 border-green-200",
+        label: "Paid",
+      },
+      cancelled: {
+        color: "bg-red-100 text-red-800 border-red-200",
+        label: "Cancelled",
+      },
     }
-
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft
-
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.active
     return (
       <Badge variant="outline" className={`${config.color} font-medium`}>
         {config.label}
@@ -257,46 +284,58 @@ export default function AdminCashVouchersPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Loader Overlay */}
+      {isSaving && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 shadow-2xl">
+            <ABICLoader size="lg" text="Saving voucher changes..." />
+          </div>
+        </div>
+      )}
+
       {/* Header Section */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between max-w-7xl mx-auto gap-4">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <Banknote className="h-6 w-6 text-green-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Cash Vouchers</h1>
-              <p className="text-gray-600">Manage all cash vouchers in the system</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Cash Vouchers</h1>
+              <p className="text-sm sm:text-base text-gray-600">
+                Manage all cash vouchers in the system
+              </p>
             </div>
           </div>
           <Link href="/dashboard/vouchers/cash">
-            <Button className="bg-green-600 hover:bg-green-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Create New Voucher
+            <Button className="w-full sm:w-auto hover:opacity-90" style={{ backgroundColor: "#b94ba7" }}>
+              Create Voucher
             </Button>
           </Link>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <Card className="shadow-sm border-0">
           <CardHeader className="bg-white border-b border-gray-100">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <CardTitle className="text-lg font-semibold text-gray-900">All Cash Vouchers</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-900">
+                  All Cash Vouchers
+                </CardTitle>
                 <CardDescription className="text-gray-600">
                   {filteredVouchers.length} voucher{filteredVouchers.length !== 1 ? "s" : ""} found
                 </CardDescription>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="w-full sm:w-auto">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     placeholder="Search vouchers..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 w-80 border-gray-200 focus:border-green-500 focus:ring-green-500"
+                    className="pl-10 w-full sm:w-80 border-gray-200 focus:border-green-500 focus:ring-green-500"
                   />
                 </div>
               </div>
@@ -304,109 +343,178 @@ export default function AdminCashVouchersPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="text-center py-12">
-                <div className="inline-flex items-center px-4 py-2 font-semibold leading-6 text-sm shadow rounded-md text-green-500 bg-green-100">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-green-500"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Loading vouchers...
-                </div>
+              <div className="flex items-center justify-center py-12">
+                <ABICLoader size="md" text="Loading cash vouchers..." />
               </div>
             ) : (
-              <div className="overflow-hidden">
-                <Table>
-                  <TableHeader className="bg-gray-50">
-                    <TableRow className="border-gray-200">
-                      <TableHead className="font-semibold text-gray-900">Voucher No.</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Amount</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Paid To</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Date</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Status</TableHead>
-                      <TableHead className="font-semibold text-gray-900">Created</TableHead>
-                      <TableHead className="text-right font-semibold text-gray-900">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredVouchers.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-12 text-gray-500">
-                          <div className="flex flex-col items-center space-y-2">
-                            <Banknote className="h-8 w-8 text-gray-300" />
-                            <p>No vouchers found</p>
-                            {searchTerm && <p className="text-sm">Try adjusting your search terms</p>}
-                          </div>
-                        </TableCell>
+              <>
+                {/* Desktop Table View */}
+                <div className="hidden lg:block overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-gray-50">
+                      <TableRow className="border-gray-200">
+                        <TableHead className="font-semibold text-gray-900">Voucher No.</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Amount</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Paid To</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Date</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Status</TableHead>
+                        <TableHead className="font-semibold text-gray-900">Created</TableHead>
+                        <TableHead className="text-right font-semibold text-gray-900">Actions</TableHead>
                       </TableRow>
-                    ) : (
-                      filteredVouchers.map((voucher, index) => (
-                        <TableRow key={voucher.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                          <TableCell className="font-medium text-green-600">{voucher.voucher_number}</TableCell>
-                          <TableCell className="font-semibold text-green-600">{formatAmount(voucher.amount)}</TableCell>
-                          <TableCell className="text-gray-900">{voucher.paid_to}</TableCell>
-                          <TableCell className="text-gray-600">{formatDate(voucher.date)}</TableCell>
-                          <TableCell>{getStatusBadge(voucher.status)}</TableCell>
-                          <TableCell className="text-gray-600">{formatDate(voucher.created_at)}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end space-x-1">
+                    </TableHeader>
+                    <TableBody>
+                      {filteredVouchers.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-12 text-gray-500">
+                            <div className="flex flex-col items-center space-y-2">
+                              <Banknote className="h-8 w-8 text-gray-300" />
+                              <p>No vouchers found</p>
+                              {searchTerm && <p className="text-sm">Try adjusting your search terms</p>}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredVouchers.map((voucher, index) => (
+                          <TableRow key={voucher.id} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                            <TableCell className="font-medium" style={{ color: "#b94ba7" }}>
+                              {voucher.voucher_number}
+                            </TableCell>
+                            <TableCell className="font-semibold" style={{ color: "#b94ba7" }}>
+                              {formatAmount(voucher.amount)}
+                            </TableCell>
+                            <TableCell className="text-gray-900">{voucher.paid_to}</TableCell>
+                            <TableCell className="text-gray-600">{formatDate(voucher.date)}</TableCell>
+                            <TableCell>{getStatusBadge(voucher.status)}</TableCell>
+                            <TableCell className="text-gray-600">{formatDate(voucher.created_at)}</TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex items-center justify-end space-x-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setViewingVoucher(voucher)
+                                    setIsViewDialogOpen(true)
+                                  }}
+                                  style={{
+                                    color: "#b94ba7",
+                                    backgroundColor: "transparent",
+                                  }}
+                                  className="hover:opacity-80"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEdit(voucher)}
+                                  className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setCancellingVoucher(voucher)
+                                    setIsCancelDialogOpen(true)
+                                  }}
+                                  disabled={voucher.status === "cancelled"}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50 disabled:text-gray-400 disabled:hover:bg-transparent"
+                                  title={
+                                    voucher.status === "cancelled"
+                                      ? "Voucher is already cancelled"
+                                      : "Cancel voucher"
+                                  }
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="lg:hidden p-4 space-y-4">
+                  {filteredVouchers.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                      <div className="flex flex-col items-center space-y-2">
+                        <Banknote className="h-8 w-8 text-gray-300" />
+                        <p>No vouchers found</p>
+                        {searchTerm && <p className="text-sm">Try adjusting your search terms</p>}
+                      </div>
+                    </div>
+                  ) : (
+                    filteredVouchers.map((voucher) => (
+                      <Card key={voucher.id} className="border border-gray-200">
+                        <CardContent className="p-4">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="font-medium text-green-600">{voucher.voucher_number}</h3>
+                                <p className="text-lg font-semibold text-green-600">
+                                  {formatAmount(voucher.amount)}
+                                </p>
+                              </div>
+                              {getStatusBadge(voucher.status)}
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Paid to:</span> {voucher.paid_to}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Date:</span> {formatDate(voucher.date)}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Created:</span> {formatDate(voucher.created_at)}
+                              </p>
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-2 pt-2">
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => {
                                   setViewingVoucher(voucher)
                                   setIsViewDialogOpen(true)
                                 }}
-                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                className="flex-1 text-green-600 border-green-200 hover:bg-green-50"
                               >
-                                <Eye className="h-4 w-4" />
+                                <Eye className="h-4 w-4 mr-2" />
+                                View
                               </Button>
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => handleEdit(voucher)}
-                                className="text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                                className="flex-1"
                               >
-                                <Edit className="h-4 w-4" />
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
                               </Button>
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                                 onClick={() => {
                                   setCancellingVoucher(voucher)
                                   setIsCancelDialogOpen(true)
                                 }}
                                 disabled={voucher.status === "cancelled"}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50 disabled:text-gray-400 disabled:hover:bg-transparent"
-                                title={
-                                  voucher.status === "cancelled" ? "Voucher is already cancelled" : "Cancel voucher"
-                                }
+                                className="flex-1 text-red-600 border-red-200 hover:bg-red-50 disabled:text-gray-400 disabled:border-gray-200"
                               >
-                                <X className="h-4 w-4" />
+                                <X className="h-4 w-4 mr-2" />
+                                Cancel
                               </Button>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -425,7 +533,7 @@ export default function AdminCashVouchersPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="paid_to">Paid To</Label>
                 <Input
@@ -457,9 +565,15 @@ export default function AdminCashVouchersPage() {
 
             {/* Particulars Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <Label>Particulars</Label>
-                <Button type="button" onClick={addParticularItem} size="sm" variant="outline">
+                <Button
+                  type="button"
+                  onClick={addParticularItem}
+                  size="sm"
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                >
                   <Plus className="h-4 w-4 mr-1" />
                   Add Item
                 </Button>
@@ -468,29 +582,37 @@ export default function AdminCashVouchersPage() {
               {editFormData.particulars_items.length > 0 ? (
                 <div className="space-y-3">
                   {editFormData.particulars_items.map((item, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-2 items-end p-3 bg-gray-50 rounded-lg">
-                      <div className="col-span-7">
-                        <Label className="text-sm">Description</Label>
-                        <Input
-                          placeholder="Enter description"
-                          value={item.description}
-                          onChange={(e) => updateParticularItem(index, "description", e.target.value)}
-                        />
-                      </div>
-                      <div className="col-span-4">
-                        <Label className="text-sm">Amount</Label>
-                        <Input
-                          placeholder="0.00"
-                          type="number"
-                          step="0.01"
-                          value={item.amount}
-                          onChange={(e) => updateParticularItem(index, "amount", e.target.value)}
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <Button type="button" onClick={() => removeParticularItem(index)} size="sm" variant="outline">
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
+                    <div key={index} className="grid grid-cols-1 gap-2 items-end p-3 bg-gray-50 rounded-lg">
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                        <div className="sm:col-span-7">
+                          <Label className="text-sm">Description</Label>
+                          <Input
+                            placeholder="Enter description"
+                            value={item.description}
+                            onChange={(e) => updateParticularItem(index, "description", e.target.value)}
+                          />
+                        </div>
+                        <div className="sm:col-span-4">
+                          <Label className="text-sm">Amount</Label>
+                          <Input
+                            placeholder="0.00"
+                            type="number"
+                            step="0.01"
+                            value={item.amount}
+                            onChange={(e) => updateParticularItem(index, "amount", e.target.value)}
+                          />
+                        </div>
+                        <div className="sm:col-span-1">
+                          <Button
+                            type="button"
+                            onClick={() => removeParticularItem(index)}
+                            size="sm"
+                            variant="outline"
+                            className="w-full"
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -530,7 +652,7 @@ export default function AdminCashVouchersPage() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="printed_name">Printed Name</Label>
                 <Input
@@ -559,7 +681,7 @@ export default function AdminCashVouchersPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="approved_date">Approved Date</Label>
                 <Input
@@ -582,12 +704,12 @@ export default function AdminCashVouchersPage() {
                   onChange={(e) =>
                     setEditFormData((prev) => ({
                       ...prev,
-                      status: e.target.value as "draft" | "approved" | "paid" | "cancelled",
+                      status: e.target.value as "active" | "approved" | "paid" | "cancelled",
                     }))
                   }
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <option value="draft">Draft</option>
+                  <option value="active">Active</option>
                   <option value="approved">Approved</option>
                   <option value="paid">Paid</option>
                   <option value="cancelled">Cancelled</option>
@@ -595,11 +717,15 @@ export default function AdminCashVouchersPage() {
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button onClick={handleSaveEdit} disabled={isSaving}>
+            <Button onClick={handleSaveEdit} disabled={isSaving} className="w-full sm:w-auto">
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
@@ -621,7 +747,7 @@ export default function AdminCashVouchersPage() {
           {viewingVoucher && (
             <div className="py-4">
               {/* Voucher Preview */}
-              <div className="border border-gray-300 p-6 bg-white rounded-lg">
+              <div className="border border-gray-300 p-6 bg-white rounded-lg overflow-x-auto">
                 <CashVoucherPreview
                   formData={{
                     amount: viewingVoucher.amount?.toString() || "",
@@ -640,7 +766,7 @@ export default function AdminCashVouchersPage() {
               </div>
 
               {/* Additional Info */}
-              <div className="mt-6 grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
                 <div>
                   <Label className="font-medium text-sm text-gray-600">Status:</Label>
                   <div className="mt-1">{getStatusBadge(viewingVoucher.status)}</div>
@@ -661,7 +787,11 @@ export default function AdminCashVouchersPage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setIsViewDialogOpen(false)}
+              className="w-full sm:w-auto"
+            >
               Close
             </Button>
           </DialogFooter>
@@ -674,13 +804,17 @@ export default function AdminCashVouchersPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel Voucher?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to cancel voucher <strong>{cancellingVoucher?.voucher_number}</strong>? This will
-              change the status to "cancelled" but you can still edit it later if needed.
+              Are you sure you want to cancel voucher{" "}
+              <strong>{cancellingVoucher?.voucher_number}</strong>? This will change the status to
+              "cancelled" but you can still edit it later if needed.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>No, Keep Active</AlertDialogCancel>
-            <AlertDialogAction onClick={handleCancel} className="bg-red-600 hover:bg-red-700">
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="w-full sm:w-auto">No, Keep Active</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancel}
+              className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
+            >
               Yes, Cancel Voucher
             </AlertDialogAction>
           </AlertDialogFooter>
